@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Quartets.Views.GamePage"
+            xmlns:vm="clr-namespace:Quartets.ViewModels"
+Title="GamePage"
+x:DataType="vm:GamePageVM">
+    <VerticalStackLayout>
+        <Label HorizontalOptions="Center" Text="{Binding OpponentsNames}" />
+        <Label HorizontalOptions="Center" Text="{Binding MyName}" />
+    </VerticalStackLayout>
+</ContentPage>

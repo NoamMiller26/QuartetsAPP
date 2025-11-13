@@ -1,0 +1,78 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="Quartets.MainPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:m="clr-namespace:Quartets.Models"
+    xmlns:vm="clr-namespace:Quartets.ViewModels"
+    Title="MainPage"
+    x:DataType="vm:MainPageVM"
+     IsBusy="{Binding IsBusy}">
+    <VerticalStackLayout Padding="10" Spacing="10">
+        <Grid ColumnDefinitions="*,*" ColumnSpacing="10" RowDefinitions="Auto,Auto,Auto">
+            <Label 
+                Grid.Row="0" 
+                Grid.Column="0"
+                Text="Game Time:"
+                FontSize="16"
+                VerticalOptions="Center" />
+            <Picker 
+                Grid.Row="0" 
+                Grid.Column="1"
+                ItemsSource="{Binding GameTimes}"
+                ItemDisplayBinding="{Binding DisplayName}"
+                SelectedItem="{Binding SelectedGameTime}"
+                FontSize="16" />
+            
+            <Label 
+                Grid.Row="1" 
+                Grid.Column="0"
+                Text="Number of Players:"
+                FontSize="16"
+                VerticalOptions="Center" />
+            <Picker 
+                Grid.Row="1" 
+                Grid.Column="1"
+                ItemsSource="{Binding PlayerCounts}"
+                SelectedItem="{Binding SelectedPlayerCount}"
+                FontSize="16" />
+            
+            <Button
+                Grid.Row="2"
+                Grid.ColumnSpan="2"
+                Margin="0,10,0,0"
+                Command="{Binding AddGameCommand}"
+                FontSize="Body"
+                HorizontalOptions="Fill"
+                Text="Create Game" />
+        </Grid>
+        
+        <ListView ItemsSource="{Binding GamesList}" SelectedItem="{Binding SelectedItem}">
+            <ListView.ItemTemplate>
+                <DataTemplate x:DataType="m:GameModel">
+                    <ViewCell>
+                        <Grid ColumnDefinitions="*,2*,Auto" ColumnSpacing="10" Padding="10">
+                            <Label
+                                Grid.Column="0"
+                                FontAttributes="Bold"
+                                FontSize="18"
+                                HorizontalTextAlignment="Start"
+                                Text="{Binding HostName}" />
+                            <Label
+                                Grid.Column="1"
+                                FontSize="16"
+                                Text="{Binding Created, StringFormat='Created: {0:g}'}"
+                                TextColor="Gray" />
+                            <Label
+                                Grid.Column="2"
+                                FontSize="14"
+                                HorizontalOptions="End"
+                                Text="{Binding PlayerCountDisplay}"
+                                TextColor="DarkBlue" />
+                        </Grid>
+                    </ViewCell>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+    </VerticalStackLayout>
+</ContentPage>
