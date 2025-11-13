@@ -18,6 +18,7 @@ namespace Quartets.Models
         public string HostName { get; set; } = string.Empty;
         public string[]? Players { get; set; }
         public DateTime Created { get; set; }
+        public int Time { get; set; }
         public int MaxNumOfPlayers { get; set; }
         public bool IsFull { get; set; }
         public int CurrentNumOfPlayers { get; set; } = 1;

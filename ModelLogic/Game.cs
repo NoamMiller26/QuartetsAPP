@@ -1,13 +1,21 @@
 ﻿
 
-using Firebase.Auth;
-using Plugin.CloudFirestore;
 using Quartets.Models;
+using Microsoft.Maui.Controls;
+using Plugin.CloudFirestore;
+
 
 namespace Quartets.ModelLogic
 {
     public class Game : GameModel
     {
+
+        public Game(GameTime selectedGameTime)
+        {
+            HostName = new User().UserName;
+            Time = selectedGameTime.Time;
+            Created = DateTime.Now;
+        }
         public Game(NumberOfPlayers selectedNumberOfPlayers)
         {
             HostName = new User().UserName;
@@ -22,6 +30,8 @@ namespace Quartets.ModelLogic
         {
         }
         public override string OpponentsNames => GetNoneMeOpponentName();
+
+        public int Time { get; }
 
         private string GetNoneMeOpponentName()
         {

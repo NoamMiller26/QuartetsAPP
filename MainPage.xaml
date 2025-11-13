@@ -8,71 +8,75 @@
     Title="MainPage"
     x:DataType="vm:MainPageVM"
      IsBusy="{Binding IsBusy}">
-    <VerticalStackLayout Padding="10" Spacing="10">
-        <Grid ColumnDefinitions="*,*" ColumnSpacing="10" RowDefinitions="Auto,Auto,Auto">
-            <Label 
-                Grid.Row="0" 
-                Grid.Column="0"
-                Text="Game Time:"
-                FontSize="16"
-                VerticalOptions="Center" />
-            <Picker 
-                Grid.Row="0" 
-                Grid.Column="1"
-                ItemsSource="{Binding GameTimes}"
-                ItemDisplayBinding="{Binding DisplayName}"
-                SelectedItem="{Binding SelectedGameTime}"
-                FontSize="16" />
-            
-            <Label 
-                Grid.Row="1" 
-                Grid.Column="0"
-                Text="Number of Players:"
-                FontSize="16"
-                VerticalOptions="Center" />
-            <Picker 
-                Grid.Row="1" 
-                Grid.Column="1"
-                ItemsSource="{Binding PlayerCounts}"
-                SelectedItem="{Binding SelectedPlayerCount}"
-                FontSize="16" />
-            
+    <Border Margin="40" Background="Gray">
+        <StackLayout>
+            <Grid ColumnDefinitions="auto,auto,4*,auto" RowDefinitions="auto,auto">
+                <Label Text="{x:Static m:Strings.AppTitle}" TextColor="Orange" />
+                <Button
+                    Grid.Column="1"
+                    Background="Gray"
+                    Command="{Binding InstructionsCommand}"
+                    FontFamily="MaterialSymbols"
+                    Text="{StaticResource IconDeveloper_guide}"
+                    TextColor="Blue" />
+                <Label
+                    Grid.Row="1"
+                    Grid.ColumnSpan="3"
+                    Margin="0,60,0,0"
+                    FontAttributes="Bold"
+                    FontSize="35"
+                    HorizontalOptions="Center"
+                    HorizontalTextAlignment="Center"
+                    Text="{Binding UserName, StringFormat={x:Static m:Strings.WelcomeTxt}}"
+                    TextColor="Orange" />
+            </Grid>
             <Button
-                Grid.Row="2"
-                Grid.ColumnSpan="2"
-                Margin="0,10,0,0"
+                Background="Red"
                 Command="{Binding AddGameCommand}"
-                FontSize="Body"
-                HorizontalOptions="Fill"
-                Text="Create Game" />
-        </Grid>
-        
-        <ListView ItemsSource="{Binding GamesList}" SelectedItem="{Binding SelectedItem}">
-            <ListView.ItemTemplate>
-                <DataTemplate x:DataType="m:GameModel">
-                    <ViewCell>
-                        <Grid ColumnDefinitions="*,2*,Auto" ColumnSpacing="10" Padding="10">
-                            <Label
+                Text="{x:Static m:Strings.CreateGameButtonTxt}"
+                TextColor="black" />
+            <Picker
+                Title="{x:Static m:Strings.PickerTitle}"
+                FontSize="20"
+                Grid.Column="1"
+                HorizontalTextAlignment="Center"
+                ItemDisplayBinding="{Binding DisplayName}"
+                ItemsSource="{Binding NumberOfPlayersList}"
+                SelectedItem="{Binding SelectedNumberOfPlayers}" />
+            <Picker
+Title="{x:Static m:Strings.SelectGameTime}"
+FontSize="20"
+HorizontalTextAlignment="Center"
+ItemDisplayBinding="{Binding DisplayName}"
+ItemsSource="{Binding GameTimes}"
+SelectedItem="{Binding SelectedGameTime}" />
+
+            <ListView ItemsSource="{Binding GamesList}" SelectedItem="{Binding SelectedItem}">
+                <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="m:GameModel">
+                        <ViewCell>
+                            <Grid ColumnDefinitions="*,2*,0.5*">
+                                <Label
                                 Grid.Column="0"
+                                Margin="20,0,0,0"
                                 FontAttributes="Bold"
-                                FontSize="18"
+                                FontSize="20"
                                 HorizontalTextAlignment="Start"
                                 Text="{Binding HostName}" />
-                            <Label
+                                <Label
                                 Grid.Column="1"
-                                FontSize="16"
-                                Text="{Binding Created, StringFormat='Created: {0:g}'}"
-                                TextColor="Gray" />
-                            <Label
+                                FontSize="20"
+                                Text="{Binding Created}" />
+                                <Label
                                 Grid.Column="2"
-                                FontSize="14"
-                                HorizontalOptions="End"
-                                Text="{Binding PlayerCountDisplay}"
-                                TextColor="DarkBlue" />
-                        </Grid>
-                    </ViewCell>
-                </DataTemplate>
-            </ListView.ItemTemplate>
-        </ListView>
-    </VerticalStackLayout>
+                                FontSize="20"
+                                HorizontalOptions="Center"
+                                Text="{Binding NumOfPlayersName}" />
+                            </Grid>
+                        </ViewCell>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </StackLayout>
+    </Border>
 </ContentPage>

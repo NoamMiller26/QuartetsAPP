@@ -8,6 +8,8 @@ namespace Quartets.Models
 {
     public abstract class GamesModel
     {
+        public ObservableCollection<GameTime>? GameTimes { get; set; } = [new GameTime(5), new GameTime(10), new GameTime(20)];
+        public GameTime SelectedGameTime { get; set; } = new GameTime();
         protected IListenerRegistration? ilr;
         protected FBData fbd = new();
         protected Game? currentGame;

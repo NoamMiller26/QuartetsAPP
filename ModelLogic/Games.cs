@@ -12,8 +12,9 @@ namespace Quartets.ModelLogic
         public void AddGame()
         {
             IsBusy = true;
-            CurrentGame = new(SelectedNumberOfPlayers)
-            {
+            CurrentGame = new(SelectedNumberOfPlayers);
+                currentGame = new(SelectedGameTime)
+                {
                 IsHostUser = true
             };
             currentGame?.OnGameDeleted += OnGameDeleted;
