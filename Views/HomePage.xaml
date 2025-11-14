@@ -22,7 +22,9 @@
             Text="{Binding UserName, StringFormat='Hello {0}!'}"
             TextColor="Black" />
         <Button Command="{Binding PlayCommand}"  Text="{x:Static m:Strings.Play}" />
-        <Button Text="{x:Static m:Strings.Instructions}"/>
+        <Label Text="First time playing?" FontSize="30" HorizontalOptions="Center" />
+        <Button Text="{x:Static m:Strings.Instructions}"
+                Command="{Binding InstructionsCommand}"/>
 
     </VerticalStackLayout>
 </ContentPage>

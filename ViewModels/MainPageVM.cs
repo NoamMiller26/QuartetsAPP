@@ -15,10 +15,10 @@ namespace Quartets.ViewModels
         public GameTime SelectedGameTime { get => games.SelectedGameTime; set => games.SelectedGameTime = value; }
         private readonly Games games = new();
         private readonly User user = new();
-        private readonly MainPageML mainPageML = new();
+     
         public ObservableCollection<NumberOfPlayers>? NumberOfPlayersList { get => games.NumberOfPlayersList; set => games.NumberOfPlayersList = value; }
         public NumberOfPlayers SelectedNumberOfPlayers { get => games.SelectedNumberOfPlayers; set => games.SelectedNumberOfPlayers = value; }
-        public ICommand InstructionsCommand { get; private set; }
+      
         public ICommand AddGameCommand => new Command(AddGame);
         public ObservableCollection<Game>? GamesList => games.GamesList;
         public string UserName => user.UserName;
@@ -47,14 +47,11 @@ namespace Quartets.ViewModels
         }
         public MainPageVM()
         {
-            InstructionsCommand = new Command(ShowInstructionsPrompt);
+           
             games.OnGameAdded += OnGameAdded;
             games.OnGamesChanged += OnGamesChanged;
         }
-        public void ShowInstructionsPrompt(object obj)
-        {
-            mainPageML.ShowInstructionsPrompt(obj);
-        }
+       
 
         private void OnGameAdded(object? sender, Game game)
         {

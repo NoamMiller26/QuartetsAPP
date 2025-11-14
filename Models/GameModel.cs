@@ -7,20 +7,27 @@ namespace Quartets.Models
 {
     public abstract class GameModel
     {
-
-        protected IListenerRegistration? ilr;
-        private readonly Games Games = new();
         protected FBData fbd = new();
+        protected IListenerRegistration? ilr;
         [Ignored]
         public EventHandler? OnGameChanged;
         [Ignored]
         public EventHandler? OnGameDeleted;
         public string HostName { get; set; } = string.Empty;
-        public string[]? Players { get; set; }
+        public string GuestName { get; set; } = string.Empty;
         public DateTime Created { get; set; }
         public int Time { get; set; }
+        private readonly Games Games = new();
+      
+       
+       
+      
+       
+        public string[]? Players { get; set; }
+  
         public int MaxNumOfPlayers { get; set; }
         public bool IsFull { get; set; }
+        [Ignored]
         public int CurrentNumOfPlayers { get; set; } = 1;
         [Ignored]
         public string Id { get; set; } = string.Empty;

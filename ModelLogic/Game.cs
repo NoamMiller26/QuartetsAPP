@@ -34,16 +34,23 @@ namespace Quartets.ModelLogic
 
         private string GetNoneMeOpponentName()
         {
+            if (Players == null)
+                return string.Empty;
+
             string players = string.Empty;
-            foreach (string player in Players!)
+
+            foreach (string player in Players)
             {
                 if (player != MyName)
                     players += player + " ";
             }
+
             if (MyName != HostName)
                 players += HostName;
-            return players;
+
+            return players.Trim();
         }
+
         public override void SetDocument(Action<Task> OnComplete)
         {
             Id = fbd.SetDocument(this, Keys.GamesCollection, Id, OnComplete);
@@ -58,8 +65,8 @@ namespace Quartets.ModelLogic
         public override void RemoveSnapShotListener()
         {
             ilr?.Remove();
-            DeleteDocument(OnComplete);
         }
+
 
         private void OnComplete(Task task)
         {

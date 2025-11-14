@@ -12,13 +12,7 @@
         <StackLayout>
             <Grid ColumnDefinitions="auto,auto,4*,auto" RowDefinitions="auto,auto">
                 <Label Text="{x:Static m:Strings.AppTitle}" TextColor="Orange" />
-                <Button
-                    Grid.Column="1"
-                    Background="Gray"
-                    Command="{Binding InstructionsCommand}"
-                    FontFamily="MaterialSymbols"
-                    Text="{StaticResource IconDeveloper_guide}"
-                    TextColor="Blue" />
+               
                 <Label
                     Grid.Row="1"
                     Grid.ColumnSpan="3"
@@ -72,6 +66,11 @@ SelectedItem="{Binding SelectedGameTime}" />
                                 FontSize="20"
                                 HorizontalOptions="Center"
                                 Text="{Binding NumOfPlayersName}" />
+                                <Label
+Grid.Column="2"
+FontSize="20"
+HorizontalOptions="Center"
+Text="{Binding TimeName}" />
                             </Grid>
                         </ViewCell>
                     </DataTemplate>

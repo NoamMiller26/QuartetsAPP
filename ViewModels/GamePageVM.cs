@@ -2,28 +2,46 @@
 using Quartets.Models;
 using Quartets.ModelLogic;
 using CommunityToolkit.Maui.Alerts;
-
-
+using Microsoft.Maui.Dispatching;
 
 namespace Quartets.ViewModels
 {
-    internal partial class GamePageVM : ObservableObject
+    public partial class GamePageVM : ObservableObject
     {
         private readonly Game game;
+
+        
+        public string OpponentsNames =>
+            game.Players == null || game.Players.Length == 0
+            ? "Waiting for players..."
+            : game.OpponentsNames;
+
         public string MyName => game.MyName;
-        public string OpponentsNames => game.OpponentsNames;
 
         public GamePageVM(Game game)
         {
-            game.OnGameChanged += OnGameChanged;
             this.game = game;
+
+            
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                OnPropertyChanged(nameof(OpponentsNames));
+            });
+
+           
+            game.OnGameChanged += OnGameChanged;
+
+            
             if (!game.IsHostUser)
                 game.UpdateGuestUser(OnComplete);
         }
 
         private void OnGameChanged(object? sender, EventArgs e)
         {
-            OnPropertyChanged(nameof(OpponentsNames));
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                OnPropertyChanged(nameof(OpponentsNames));
+            });
         }
 
         private void OnComplete(Task task)
