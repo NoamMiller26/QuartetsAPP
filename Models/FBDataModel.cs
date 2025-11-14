@@ -22,7 +22,7 @@ namespace Quartets.Models
             FirebaseAuthConfig fac = new()
             {
                 ApiKey = Keys.FbAPIKey,
-                AuthDomain = Keys.FbAppDomailKey,
+                AuthDomain = Keys.FbAppDomainKey,
                 Providers = [new EmailProvider()]
             };
             facl = new FirebaseAuthClient(fac);

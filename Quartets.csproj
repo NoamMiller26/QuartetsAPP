@@ -25,7 +25,7 @@
 		<ApplicationTitle>Quartets</ApplicationTitle>
 
 		<!-- App Identifier -->
-		<ApplicationId>com.companyname.quartets</ApplicationId>
+		<ApplicationId>com.school.quartets</ApplicationId>
 
 		<!-- Versions -->
 		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
@@ -42,21 +42,55 @@
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net8.0-android|AnyCPU'">
-	  <ApplicationId>com.metar.quartets</ApplicationId>
+	  <ApplicationId>com.school.quartets</ApplicationId>
+	  <ApplicationIdGuid>com.school.quartets</ApplicationIdGuid>
 	</PropertyGroup>
 
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net8.0-windows10.0.19041.0|AnyCPU'">
-	  <ApplicationId>com.metar.quartets</ApplicationId>
+	  <ApplicationId>com.school.quartets</ApplicationId>
+	  <ApplicationIdGuid>com.school.quartets</ApplicationIdGuid>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net8.0-android|AnyCPU'">
-	  <ApplicationId>com.metar.quartets</ApplicationId>
+	  <ApplicationId>com.school.quartets</ApplicationId>
+	  <ApplicationIdGuid>com.school.quartets</ApplicationIdGuid>
 	</PropertyGroup>
 
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net8.0-windows10.0.19041.0|AnyCPU'">
-	  <ApplicationId>com.metar.quartets</ApplicationId>
+	  <ApplicationId>com.school.quartets</ApplicationId>
+	  <ApplicationIdGuid>com.school.quartets</ApplicationIdGuid>
+	</PropertyGroup>
+
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net9.0-android|AnyCPU'">
+	  <ApplicationIdGuid>com.school.quartets</ApplicationIdGuid>
+	</PropertyGroup>
+
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net9.0-ios|AnyCPU'">
+	  <ApplicationIdGuid>com.school.quartets</ApplicationIdGuid>
+	</PropertyGroup>
+
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net9.0-maccatalyst|AnyCPU'">
+	  <ApplicationIdGuid>com.school.quartets</ApplicationIdGuid>
+	</PropertyGroup>
+
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net9.0-android|AnyCPU'">
+	  <ApplicationIdGuid>com.school.quartets</ApplicationIdGuid>
+	</PropertyGroup>
+
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net9.0-ios|AnyCPU'">
+	  <ApplicationIdGuid>com.school.quartets</ApplicationIdGuid>
+	</PropertyGroup>
+
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net9.0-maccatalyst|AnyCPU'">
+	  <ApplicationIdGuid>com.school.quartets</ApplicationIdGuid>
 	</PropertyGroup>
 
 	<ItemGroup>

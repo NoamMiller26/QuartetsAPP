@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1080133867693:android:270725dd636eecea890e24",
+        "mobilesdk_app_id": "1:1080133867693:android:a745659a5bf37403890e24",
         "android_client_info": {
-          "package_name": "com.metar.quartets"
+          "package_name": "com.school.quartets"
         }
       },
       "oauth_client": [],

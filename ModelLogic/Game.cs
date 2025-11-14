@@ -31,7 +31,6 @@ namespace Quartets.ModelLogic
         }
         public override string OpponentsNames => GetNoneMeOpponentName();
 
-        public int Time { get; }
 
         private string GetNoneMeOpponentName()
         {
