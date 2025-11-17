@@ -11,15 +11,24 @@ namespace Quartets.ViewModels
 {
     public partial class MainPageVM : ObservableObject
     {
+        private readonly Games games = new();
+        public ICommand AddGameCommand => new Command(AddGame);
+        private void AddGame()
+        {
+            if (!IsBusy)
+            {
+                games.AddGame();
+                OnPropertyChanged(nameof(IsBusy));
+            }
+        }
         public ObservableCollection<GameTime>? GameTimes { get => games.GameTimes; set => games.GameTimes = value; }
         public GameTime SelectedGameTime { get => games.SelectedGameTime; set => games.SelectedGameTime = value; }
-        private readonly Games games = new();
         private readonly User user = new();
      
         public ObservableCollection<NumberOfPlayers>? NumberOfPlayersList { get => games.NumberOfPlayersList; set => games.NumberOfPlayersList = value; }
         public NumberOfPlayers SelectedNumberOfPlayers { get => games.SelectedNumberOfPlayers; set => games.SelectedNumberOfPlayers = value; }
       
-        public ICommand AddGameCommand => new Command(AddGame);
+    
         public ObservableCollection<Game>? GamesList => games.GamesList;
         public string UserName => user.UserName;
         public bool IsBusy => games.IsBusy;
@@ -40,18 +49,19 @@ namespace Quartets.ViewModels
                 }
             }
         }
-        private void AddGame()
-        {
-            games.AddGame();
-            OnPropertyChanged(nameof(IsBusy));
-        }
+        
         public MainPageVM()
         {
            
             games.OnGameAdded += OnGameAdded;
             games.OnGamesChanged += OnGamesChanged;
         }
-       
+
+
+        private void OnGamesChanged(object? sender, EventArgs e)
+        {
+            OnPropertyChanged(nameof(GamesList));
+        }
 
         private void OnGameAdded(object? sender, Game game)
         {
@@ -70,10 +80,7 @@ namespace Quartets.ViewModels
         {
             games.RemoveSnapshotListener();
         }
-        private void OnGamesChanged(object? sender, EventArgs e)
-        {
-            OnPropertyChanged(nameof(GamesList));
-        }
+       
 
     }
 }

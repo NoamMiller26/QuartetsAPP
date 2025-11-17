@@ -2,6 +2,9 @@
 {
     static class Strings
     {
+        public const string GameCanceld = "Game Canceled";
+        public const string WaitMessage = "Please wait";
+        public const string PlayMessage = "Play please";
         public const string Register = "Register";
         public const string UserName = "User name";
         public const string Password = "Password";

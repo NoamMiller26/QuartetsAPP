@@ -3,18 +3,23 @@
 using Quartets.Models;
 using Microsoft.Maui.Controls;
 using Plugin.CloudFirestore;
+using CommunityToolkit.Maui.Alerts;
 
 
 namespace Quartets.ModelLogic
 {
     public class Game : GameModel
     {
+        public override string OpponentsNames => IsHostUser ? GuestName : HostName;
+        protected override GameStatus Status => _status;
 
         public Game(GameTime selectedGameTime)
         {
             HostName = new User().UserName;
+            IsHostUser = true;
             Time = selectedGameTime.Time;
             Created = DateTime.Now;
+            UpdateStatus();
         }
         public Game(NumberOfPlayers selectedNumberOfPlayers)
         {
@@ -25,31 +30,26 @@ namespace Quartets.ModelLogic
             CurrentNumOfPlayers = 1;
             MaxNumOfPlayers = selectedNumberOfPlayers.NumPlayers;
             Players = new string[MaxNumOfPlayers];
+            UpdateStatus();
         }
         public Game()
         {
+            UpdateStatus();
         }
-        public override string OpponentsNames => GetNoneMeOpponentName();
-
-
-        private string GetNoneMeOpponentName()
+        protected override void UpdateStatus()
         {
-            if (Players == null)
-                return string.Empty;
-
-            string players = string.Empty;
-
-            foreach (string player in Players)
-            {
-                if (player != MyName)
-                    players += player + " ";
-            }
-
-            if (MyName != HostName)
-                players += HostName;
-
-            return players.Trim();
+            _status.CurrentStatus = IsHostUser && IsHostTurn || !IsHostUser && !IsHostTurn ?
+                GameStatus.Status.Play : GameStatus.Status.Wait;
         }
+       
+
+
+
+
+
+
+
+
 
         public override void SetDocument(Action<Task> OnComplete)
         {
@@ -60,11 +60,13 @@ namespace Quartets.ModelLogic
         public override void AddSnapShotListener()
         {
             ilr = fbd.AddSnapshotListener(Keys.GamesCollection, Id, OnChange);
+
         }
 
         public override void RemoveSnapShotListener()
         {
             ilr?.Remove();
+            DeleteDocument(OnComplete);
         }
 
 
@@ -80,8 +82,17 @@ namespace Quartets.ModelLogic
             if (updatedGame != null)
             {
                 IsFull = updatedGame.IsFull;
-                Players = updatedGame.Players;
+                GuestName = updatedGame.GuestName;
                 OnGameChanged?.Invoke(this, EventArgs.Empty);
+            }
+            else
+            {
+                MainThread.InvokeOnMainThreadAsync(() =>
+                {
+                    Shell.Current.Navigation.PopAsync();
+                    Toast.Make(Strings.GameCanceld, CommunityToolkit.Maui.Core.ToastDuration.Long, 14).Show();
+                });
+
             }
         }
 
