@@ -1,4 +1,5 @@
-﻿using Quartets.ViewModels;
+﻿using Quartets.ModelLogic;
+using Quartets.ViewModels;
 
 namespace Quartets;
 
@@ -20,6 +21,34 @@ public partial class MainPage : ContentPage
     {
         mpVM.RemoveSnapshotListener();
         base.OnDisappearing();
+    }
+
+    private async void OnGameItemTapped(object sender, ItemTappedEventArgs e)
+    {
+        if (e.Item is Game game)
+        {
+            // Set the current game in the ViewModel
+            mpVM.SelectedItem = game;
+            
+            try
+            {
+                if (Shell.Current != null)
+                {
+                    await Shell.Current.Navigation.PushAsync(new Views.GamePage(game), true);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log or handle the exception as needed
+                System.Diagnostics.Debug.WriteLine($"Navigation error: {ex.Message}");
+            }
+        }
+        
+        // Clear the selection
+        if (sender is ListView listView)
+        {
+            listView.SelectedItem = null;
+        }
     }
 }       
     

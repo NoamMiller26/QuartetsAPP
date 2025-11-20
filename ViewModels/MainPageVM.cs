@@ -33,21 +33,9 @@ namespace Quartets.ViewModels
         public string UserName => user.UserName;
         public bool IsBusy => games.IsBusy;
         public Game? SelectedItem
-
         {
             get => games.CurrentGame;
-
-            set
-            {
-                if (value != null)
-                {
-                    games.CurrentGame = value;
-                    MainThread.InvokeOnMainThreadAsync(() =>
-                    {
-                        Shell.Current.Navigation.PushAsync(new GamePage(value), true);
-                    });
-                }
-            }
+            set => games.CurrentGame = value;
         }
         
         public MainPageVM()
@@ -66,9 +54,20 @@ namespace Quartets.ViewModels
         private void OnGameAdded(object? sender, Game game)
         {
             OnPropertyChanged(nameof(IsBusy));
-            MainThread.InvokeOnMainThreadAsync(() =>
+            MainThread.BeginInvokeOnMainThread(async () =>
             {
-                Shell.Current.Navigation.PushAsync(new GamePage(game), true);
+                try
+                {
+                    if (Shell.Current != null)
+                    {
+                        await Shell.Current.Navigation.PushAsync(new GamePage(game), true);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Log or handle the exception as needed
+                    System.Diagnostics.Debug.WriteLine($"Navigation error: {ex.Message}");
+                }
             });
         }
         public void AddSnapshotListener()

@@ -45,7 +45,7 @@ ItemDisplayBinding="{Binding DisplayName}"
 ItemsSource="{Binding GameTimes}"
 SelectedItem="{Binding SelectedGameTime}" />
 
-            <ListView ItemsSource="{Binding GamesList}" SelectedItem="{Binding SelectedItem}">
+            <ListView ItemsSource="{Binding GamesList}" ItemTapped="OnGameItemTapped">
                 <ListView.ItemTemplate>
                     <DataTemplate x:DataType="m:GameModel">
                         <ViewCell>
