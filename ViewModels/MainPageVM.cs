@@ -23,12 +23,12 @@ namespace Quartets.ViewModels
         }
         public ObservableCollection<GameTime>? GameTimes { get => games.GameTimes; set => games.GameTimes = value; }
         public GameTime SelectedGameTime { get => games.SelectedGameTime; set => games.SelectedGameTime = value; }
-        private readonly User user = new();
+       
      
         public ObservableCollection<NumberOfPlayers>? NumberOfPlayersList { get => games.NumberOfPlayersList; set => games.NumberOfPlayersList = value; }
         public NumberOfPlayers SelectedNumberOfPlayers { get => games.SelectedNumberOfPlayers; set => games.SelectedNumberOfPlayers = value; }
-      
-    
+        private readonly User user = new();
+
         public ObservableCollection<Game>? GamesList => games.GamesList;
         public string UserName => user.UserName;
         public bool IsBusy => games.IsBusy;
@@ -53,21 +53,14 @@ namespace Quartets.ViewModels
 
         private void OnGameAdded(object? sender, Game game)
         {
+          
             OnPropertyChanged(nameof(IsBusy));
-            MainThread.BeginInvokeOnMainThread(async () =>
+          
+            MainThread.InvokeOnMainThreadAsync(() =>
             {
-                try
-                {
-                    if (Shell.Current != null)
-                    {
-                        await Shell.Current.Navigation.PushAsync(new GamePage(game), true);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    // Log or handle the exception as needed
-                    System.Diagnostics.Debug.WriteLine($"Navigation error: {ex.Message}");
-                }
+             
+                //Shell.Current.Navigation.PushAsync(new GamePage(game), true);
+                Shell.Current.Navigation.PushAsync(new GamePage(game), true);
             });
         }
         public void AddSnapshotListener()

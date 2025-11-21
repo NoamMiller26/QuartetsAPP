@@ -1,16 +1,19 @@
 ﻿
 
-using Quartets.Models;
+
+using CommunityToolkit.Maui.Alerts;
+using CommunityToolkit.Maui.Core;
 using Microsoft.Maui.Controls;
 using Plugin.CloudFirestore;
-using CommunityToolkit.Maui.Alerts;
+using Quartets.Models;
+using System.Linq;
 
 
 namespace Quartets.ModelLogic
 {
     public class Game : GameModel
     {
-        public override string OpponentsNames => IsHostUser ? GuestName : HostName;
+       
         protected override GameStatus Status => _status;
 
         public Game(GameTime selectedGameTime)
@@ -19,7 +22,9 @@ namespace Quartets.ModelLogic
             IsHostUser = true;
             Time = selectedGameTime.Time;
             Created = DateTime.Now;
+
             UpdateStatus();
+
         }
         public Game(NumberOfPlayers selectedNumberOfPlayers)
         {
@@ -29,8 +34,10 @@ namespace Quartets.ModelLogic
             IsFull = false;
             CurrentNumOfPlayers = 1;
             MaxNumOfPlayers = selectedNumberOfPlayers.NumPlayers;
-            Players = new string[MaxNumOfPlayers];
+            PlayersNames = new string[MaxNumOfPlayers];
+            PlayersArr = new Player[MaxNumOfPlayers];
             UpdateStatus();
+
         }
         public Game()
         {
@@ -40,18 +47,8 @@ namespace Quartets.ModelLogic
         {
             _status.CurrentStatus = IsHostUser && IsHostTurn || !IsHostUser && !IsHostTurn ?
                 GameStatus.Status.Play : GameStatus.Status.Wait;
-        }
-       
-
-
-
-
-
-
-
-
-
-        public override void SetDocument(Action<Task> OnComplete)
+        }       
+    public override void SetDocument(Action<Task> OnComplete)
         {
             Id = fbd.SetDocument(this, Keys.GamesCollection, Id, OnComplete);
         }
@@ -82,23 +79,23 @@ namespace Quartets.ModelLogic
             if (updatedGame != null)
             {
                 IsFull = updatedGame.IsFull;
-                GuestName = updatedGame.GuestName;
+                PlayersNames = updatedGame.PlayersNames;
                 OnGameChanged?.Invoke(this, EventArgs.Empty);
             }
             else
             {
+
                 MainThread.InvokeOnMainThreadAsync(() =>
                 {
                     Shell.Current.Navigation.PopAsync();
-                    Toast.Make(Strings.GameCanceld, CommunityToolkit.Maui.Core.ToastDuration.Long, 14).Show();
+                    Toast.Make(Strings.GameDeleted, ToastDuration.Long).Show();
                 });
-
             }
         }
 
         public void UpdateGuestUser(Action<Task> OnComplete)
         {
-            Players?[CurrentNumOfPlayers - 1] = MyName;
+            PlayersNames?[CurrentNumOfPlayers - 1] = MyName;
             CurrentNumOfPlayers++;
             if (CurrentNumOfPlayers == MaxNumOfPlayers)
                 IsFull = true;
@@ -109,7 +106,7 @@ namespace Quartets.ModelLogic
         {
             Dictionary<string, object> dict = new()
             {
-                { nameof(Players), Players! },
+                { nameof(PlayersNames), PlayersNames! },
                 { nameof(IsFull), IsFull },
                 {  nameof(CurrentNumOfPlayers), CurrentNumOfPlayers }
             };

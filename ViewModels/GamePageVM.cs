@@ -13,16 +13,16 @@ namespace Quartets.ViewModels
         public string MyName => game.MyName;
         public string StatusMessage => game.StatusMessage;
 
-        public string OpponentsNames => game.OpponentsNames ?? string.Empty;
+       
 
 
 
 
         public GamePageVM(Game game)
         {
+            
             this.game = game;
             game.OnGameChanged += OnGameChanged;
-
             if (!game.IsHostUser)
                 game.UpdateGuestUser(OnComplete);
         }
@@ -30,7 +30,7 @@ namespace Quartets.ViewModels
 
         private void OnGameChanged(object? sender, EventArgs e)
         {
-            OnPropertyChanged(nameof(OpponentsNames));
+            OnPropertyChanged(nameof());
         }
 
         private void OnComplete(Task task)
