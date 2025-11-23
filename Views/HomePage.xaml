@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="Quartets.Views.HomePage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:m="clr-namespace:Quartets.Models"
+    xmlns:vm="clr-namespace:Quartets.ViewModels"
+    Title="HomePage"
+    x:DataType="vm:HomePageVM"
+   >
+    <VerticalStackLayout Spacing="20">
+        <Button HorizontalOptions="End" BackgroundColor="Transparent">
+            <Button.ImageSource>
+                <FontImageSource Glyph="{StaticResource IconSettings}" Size="40" Color="DarkSlateGray">
+                    <FontImageSource.FontFamily>MaterialSymbols</FontImageSource.FontFamily>
+                </FontImageSource>
+            </Button.ImageSource>
+        </Button>
+        <Label
+            FontSize="30"
+            HorizontalOptions="Center"
+            Text="{Binding UserName, StringFormat='Hello {0}!'}"
+            TextColor="Black" />
+        <Button Command="{Binding PlayCommand}"  Text="{x:Static m:Strings.Play}" />
+        <Label Text="First time playing?" FontSize="30" HorizontalOptions="Center" />
+        <Button Text="{x:Static m:Strings.Instructions}"
+                Command="{Binding InstructionsCommand}"/>
+
+    </VerticalStackLayout>
+</ContentPage>

@@ -1,0 +1,13 @@
+﻿using Quartets.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Quartets.ModelLogic
+{
+    public class Board : BoardModel
+    {
+    }
+}

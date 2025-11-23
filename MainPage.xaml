@@ -1,0 +1,81 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="Quartets.MainPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:m="clr-namespace:Quartets.Models"
+    xmlns:vm="clr-namespace:Quartets.ViewModels"
+    Title="MainPage"
+    x:DataType="vm:MainPageVM"
+    IsBusy="{Binding IsBusy}">
+    <Border Margin="40" Background="Gray">
+        <StackLayout>
+            <Grid ColumnDefinitions="auto,auto,4*,auto" RowDefinitions="auto,auto">
+                <Label Text="{x:Static m:Strings.AppTitle}" TextColor="Orange" />
+
+                <Label
+                    Grid.Row="1"
+                    Grid.ColumnSpan="3"
+                    Margin="0,60,0,0"
+                    FontAttributes="Bold"
+                    FontSize="35"
+                    HorizontalOptions="Center"
+                    HorizontalTextAlignment="Center"
+                    Text="{Binding UserName, StringFormat={x:Static m:Strings.WelcomeTxt}}"
+                    TextColor="Orange" />
+            </Grid>
+            <Button
+                Background="Red"
+                Command="{Binding AddGameCommand}"
+                Text="{x:Static m:Strings.CreateGameButtonTxt}"
+                TextColor="black" />
+            <Picker
+                Title="{x:Static m:Strings.PickerTitle}"
+                Grid.Column="1"
+                FontSize="20"
+                HorizontalTextAlignment="Center"
+                ItemDisplayBinding="{Binding DisplayName}"
+                ItemsSource="{Binding NumberOfPlayersList}"
+                SelectedItem="{Binding SelectedNumberOfPlayers}" />
+            <Picker
+                Title="{x:Static m:Strings.SelectGameTime}"
+                FontSize="20"
+                HorizontalTextAlignment="Center"
+                ItemDisplayBinding="{Binding DisplayName}"
+                ItemsSource="{Binding GameTimes}"
+                SelectedItem="{Binding SelectedGameTime}" />
+
+            <ListView ItemsSource="{Binding GamesList}">
+                <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="m:GameModel">
+                        <ViewCell>
+                            <Grid ColumnDefinitions="*,2*,0.5*">
+                                <Label
+                                    Grid.Column="0"
+                                    Margin="20,0,0,0"
+                                    FontAttributes="Bold"
+                                    FontSize="20"
+                                    HorizontalTextAlignment="Start"
+                                    Text="{Binding HostName}" />
+                                <Label
+                                    Grid.Column="1"
+                                    FontSize="20"
+                                    Text="{Binding Created}" />
+                                <Label
+                                    Grid.Column="2"
+                                    FontSize="20"
+                                    HorizontalOptions="Center"
+                                    Text="{Binding NumOfPlayersName}" />
+                                <Label
+                                    Grid.Column="2"
+                                    FontSize="20"
+                                    HorizontalOptions="Center"
+                                    Text="{Binding TimeName}" />
+                            </Grid>
+                        </ViewCell>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </StackLayout>
+    </Border>
+</ContentPage>

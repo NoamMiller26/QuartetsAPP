@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:m="clr-namespace:Quartets.Models"
+xmlns:vm="clr-namespace:Quartets.ViewModels"
+             x:Class="Quartets.Views.RegisterPage"
+               x:DataType="vm:RegisterPageVM"
+             Title="RegisterPage"
+              BackgroundImageSource="background2.png"
+             >
+    <VerticalStackLayout
+       Padding="30"
+       Spacing="25"
+       VerticalOptions="Center">
+        <Label  
+           FontAttributes="Bold"  
+           FontSize="60"  
+           TextColor="Black"  
+           HorizontalOptions="Center" 
+           Text="{x:Static m:Strings.Register}" />
+        <Label 
+           FontAttributes="Bold"             
+           FontFamily="MaterialSymbols"            
+           FontSize="45"             
+           TextColor="DarkCyan"        
+           HorizontalOptions="Center"
+           Text="{StaticResource IconEncrypted_add_circle}" />
+        <Border  
+           Padding="10"                 
+           Stroke="DarkCyan"                
+           StrokeShape="RoundRectangle 15" 
+           StrokeThickness="1">
+            <Entry 
+               FontSize="18"
+               Placeholder="{x:Static m:Strings.UserName}" 
+               Text="{Binding UserName}" 
+               Margin="6"/>
+        </Border>
+        <Border               
+           Padding="1"                    
+           Stroke="DarkCyan"                    
+           StrokeShape="RoundRectangle 15"     
+           StrokeThickness="1">
+            <Grid
+               Padding="10"
+               ColumnDefinitions="*,Auto"
+               VerticalOptions="Center">
+                <Entry 
+                   FontSize="18"
+                   Placeholder="{x:Static m:Strings.Password}" 
+                   Text="{Binding Password}" 
+                   IsPassword="{Binding IsPassword}" />
+                <Button
+                   BackgroundColor="Transparent"         
+                   BorderWidth="0"          
+                   Command="{Binding ToggleIsPasswordCommand}"           
+                   FontFamily="MaterialSymbols"           
+                   FontSize="24"           
+                   Style="{StaticResource IconButtonStyle}"
+                   HorizontalOptions="End"
+                   Text="{Binding IsPassword, Converter={StaticResource passwordIconConvert}}"
+                   TextColor="DarkCyan"
+                   VerticalOptions="Center" />
+            </Grid>
+        </Border>
+        <Border               
+           Padding="10"                    
+           Stroke="DarkCyan"                    
+           StrokeShape="RoundRectangle 15"     
+           StrokeThickness="1">
+            <Entry 
+               FontSize="18"
+               Placeholder="{x:Static m:Strings.Email}" 
+               Text="{Binding Email}" 
+               Margin="6"/>
+        </Border>
+        <Border               
+           Padding="10"                    
+           Stroke="DarkCyan"                    
+           StrokeShape="RoundRectangle 15"     
+           StrokeThickness="1">
+            <Entry 
+               FontSize="18"
+               Placeholder="{x:Static m:Strings.Age}" 
+               Text="{Binding Age}" />
+        </Border>
+        <Button 
+           Command="{Binding RegisterCommand}" 
+           Text="{x:Static m:Strings.Register}"
+           CornerRadius="20"
+           FontSize="30"
+           HeightRequest="70"
+           TextColor="White">
+            <Button.ImageSource>
+                <FontImageSource Glyph="{StaticResource IconPerson_add}">
+                    <FontImageSource.FontFamily>MaterialSymbols</FontImageSource.FontFamily>
+                </FontImageSource>
+            </Button.ImageSource>
+        </Button>
+    </VerticalStackLayout>
+</ContentPage>
