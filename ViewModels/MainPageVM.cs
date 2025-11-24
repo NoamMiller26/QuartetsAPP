@@ -12,54 +12,54 @@ namespace Quartets.ViewModels
     public partial class MainPageVM : ObservableObject
     {
         private readonly Games games = new();
-        public ICommand AddGameCommand => new Command(AddGame);
-        private void AddGame()
-        {
-            if (!IsBusy)
-            {
-                games.AddGame();
-                OnPropertyChanged(nameof(IsBusy));
-            }
-        }
+        private readonly User user = new();
+        private readonly MainPageML mainPageML = new();
         public ObservableCollection<GameTime>? GameTimes { get => games.GameTimes; set => games.GameTimes = value; }
         public GameTime SelectedGameTime { get => games.SelectedGameTime; set => games.SelectedGameTime = value; }
-       
-     
         public ObservableCollection<NumberOfPlayers>? NumberOfPlayersList { get => games.NumberOfPlayersList; set => games.NumberOfPlayersList = value; }
         public NumberOfPlayers SelectedNumberOfPlayers { get => games.SelectedNumberOfPlayers; set => games.SelectedNumberOfPlayers = value; }
-        private readonly User user = new();
-
+        public ICommand InstructionsCommand { get; private set; }
+        public ICommand AddGameCommand => new Command(AddGame);
         public ObservableCollection<Game>? GamesList => games.GamesList;
         public string UserName => user.UserName;
         public bool IsBusy => games.IsBusy;
         public Game? SelectedItem
         {
             get => games.CurrentGame;
-            set => games.CurrentGame = value;
+
+            set
+            {
+                if (value != null)
+                {
+                    games.CurrentGame = value;
+                    MainThread.InvokeOnMainThreadAsync(() =>
+                    {
+                        Shell.Current.Navigation.PushAsync(new GamePage(value), true);
+                    });
+                }
+            }
         }
-        
+        private void AddGame()
+        {
+            games.AddGame();
+            OnPropertyChanged(nameof(IsBusy));
+        }
         public MainPageVM()
         {
-           
+            InstructionsCommand = new Command(ShowInstructionsPrompt);
             games.OnGameAdded += OnGameAdded;
             games.OnGamesChanged += OnGamesChanged;
         }
-
-
-        private void OnGamesChanged(object? sender, EventArgs e)
+        public void ShowInstructionsPrompt(object obj)
         {
-            OnPropertyChanged(nameof(GamesList));
+            mainPageML.ShowInstructionsPrompt(obj);
         }
 
         private void OnGameAdded(object? sender, Game game)
         {
-          
             OnPropertyChanged(nameof(IsBusy));
-          
             MainThread.InvokeOnMainThreadAsync(() =>
             {
-             
-                //Shell.Current.Navigation.PushAsync(new GamePage(game), true);
                 Shell.Current.Navigation.PushAsync(new GamePage(game), true);
             });
         }
@@ -72,7 +72,10 @@ namespace Quartets.ViewModels
         {
             games.RemoveSnapshotListener();
         }
-       
+        private void OnGamesChanged(object? sender, EventArgs e)
+        {
+            OnPropertyChanged(nameof(GamesList));
+        }
 
     }
 }

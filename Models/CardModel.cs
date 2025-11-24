@@ -7,90 +7,32 @@ using System.Threading.Tasks;
 
 namespace Quartets.Models
 {
-    class CardModel : ImageButton
+    public class CardModel : ImageButton
     {
-        public class Card
+        public CardModel(Shapes shape, int value)
         {
-            public string Category { get; set; }=string.Empty;
-            public string Group { get; set; } = string.Empty;
-            public string Name { get; set; } = string.Empty;
+            Shape = shape;
+            Value = value;
+            if (value > 0)
+                Source = CardsImage[(int)shape, value - 1];
+            Aspect = Aspect.AspectFit;
+            HorizontalOptions = new LayoutOptions(LayoutAlignment.Start, false);
+            WidthRequest = 100;
         }
-        List<Card> deck = new List<Card>
-{
-    // ===== Animals =====
-    // Savanna
-    new Card { Category="Animals", Group="Savanna", Name="Lion" },
-    new Card { Category="Animals", Group="Savanna", Name="Elephant" },
-    new Card { Category="Animals", Group="Savanna", Name="Giraffe" },
-    new Card { Category="Animals", Group="Savanna", Name="Zebra" },
-
-    // Forest
-    new Card { Category="Animals", Group="Forest", Name="Bear" },
-    new Card { Category="Animals", Group="Forest", Name="Wolf" },
-    new Card { Category="Animals", Group="Forest", Name="Fox" },
-    new Card { Category="Animals", Group="Forest", Name="Deer" },
-
-    // Ocean
-    new Card { Category="Animals", Group="Ocean", Name="Dolphin" },
-    new Card { Category="Animals", Group="Ocean", Name="Shark" },
-    new Card { Category="Animals", Group="Ocean", Name="Octopus" },
-    new Card { Category="Animals", Group="Ocean", Name="Turtle" },
-
-    // Birds
-    new Card { Category="Animals", Group="Birds", Name="Eagle" },
-    new Card { Category="Animals", Group="Birds", Name="Owl" },
-    new Card { Category="Animals", Group="Birds", Name="Parrot" },
-    new Card { Category="Animals", Group="Birds", Name="Penguin" },
-
-    // ===== Vehicles =====
-    // Cars
-    new Card { Category="Vehicles", Group="Cars", Name="Sedan" },
-    new Card { Category="Vehicles", Group="Cars", Name="SUV" },
-    new Card { Category="Vehicles", Group="Cars", Name="Sports Car" },
-    new Card { Category="Vehicles", Group="Cars", Name="Electric Car" },
-
-    // Air Vehicles
-    new Card { Category="Vehicles", Group="Air", Name="Airplane" },
-    new Card { Category="Vehicles", Group="Air", Name="Helicopter" },
-    new Card { Category="Vehicles", Group="Air", Name="Jet" },
-    new Card { Category="Vehicles", Group="Air", Name="Glider" },
-
-    // Water Vehicles
-    new Card { Category="Vehicles", Group="Water", Name="Boat" },
-    new Card { Category="Vehicles", Group="Water", Name="Ship" },
-    new Card { Category="Vehicles", Group="Water", Name="Submarine" },
-    new Card { Category="Vehicles", Group="Water", Name="Jet Ski" },
-
-    // Work Vehicles
-    new Card { Category="Vehicles", Group="Work", Name="Fire Truck" },
-    new Card { Category="Vehicles", Group="Work", Name="Ambulance" },
-    new Card { Category="Vehicles", Group="Work", Name="Tractor" },
-    new Card { Category="Vehicles", Group="Work", Name="Bulldozer" },
-
-    // ===== Sports =====
-    // Ball Sports
-    new Card { Category="Sports", Group="Ball Sports", Name="Football" },
-    new Card { Category="Sports", Group="Ball Sports", Name="Basketball" },
-    new Card { Category="Sports", Group="Ball Sports", Name="Tennis" },
-    new Card { Category="Sports", Group="Ball Sports", Name="Volleyball" },
-
-    // Water Sports
-    new Card { Category="Sports", Group="Water Sports", Name="Swimming" },
-    new Card { Category="Sports", Group="Water Sports", Name="Surfing" },
-    new Card { Category="Sports", Group="Water Sports", Name="Diving" },
-    new Card { Category="Sports", Group="Water Sports", Name="Water Polo" },
-
-    // Combat Sports
-    new Card { Category="Sports", Group="Combat Sports", Name="Boxing" },
-    new Card { Category="Sports", Group="Combat Sports", Name="Judo" },
-    new Card { Category="Sports", Group="Combat Sports", Name="Karate" },
-    new Card { Category="Sports", Group="Combat Sports", Name="Taekwondo" },
-
-    // Athletics
-    new Card { Category="Sports", Group="Athletics", Name="Running" },
-    new Card { Category="Sports", Group="Athletics", Name="High Jump" },
-    new Card { Category="Sports", Group="Athletics", Name="Long Jump" },
-    new Card { Category="Sports", Group="Athletics", Name="Javelin" }
-};
+        private static readonly string[,] CardsImage = {
+        {"ace_club.png","two_club.png","three_club.png","four_club.png","five_club.png","six_club.png","seven_club.png","eight_club.png","nine_club.png","ten_club.png","jack_club.png","queen_club.png","king_club.png"  },
+        {"ace_diamond.png","two_diamond.png","three_diamond.png","four_diamond.png","five_diamond.png","six_diamond.png","seven_diamond.png","eight_diamond.png","nine_diamond.png","ten_diamond.png","jack_diamond.png","queen_diamond.png","king_diamond.png"  },
+        {"ace_heart.png","two_heart.png","three_heart.png","four_heart.png","five_heart.png","six_heart.png","seven_heart.png","eight_heart.png","nine_heart.png","ten_heart.png","jack_heart.png","queen_heart.png","king_heart.png" },
+        {"ace_spade.png","two_spade.png","three_spade.png","four_spade.png" ,"five_spade.png","six_spade.png","seven_spade.png","eight_spade.png","nine_spade.png" ,"ten_spade.png","jack_spade.png","queen_spade.png","king_spade.png"}};
+        public enum Shapes { Club, Diamond, Heart, Spade };
+        public static int CardsInShape
+        {
+            get
+            {
+                return CardsImage.GetLength(1);
+            }
+        }
+        public Shapes Shape { get; set; }
+        public int Value { get; set; }
     }
 }

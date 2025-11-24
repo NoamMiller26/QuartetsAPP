@@ -2,6 +2,8 @@
 using Plugin.CloudFirestore;
 using Plugin.CloudFirestore.Attributes;
 using Quartets.ModelLogic;
+using Quartets.ModelsLogic;
+using System.Collections.ObjectModel;
 
 namespace Quartets.Models
 {
@@ -11,7 +13,7 @@ namespace Quartets.Models
         private readonly Games Games = new();
         protected FBData fbd = new();
         [Ignored]
-        public Player[]? PlayersArr { get; set; }
+        public ObservableCollection<Player> Players { get; set; } = new ObservableCollection<Player>();
         protected Board GameBoard = new();
         protected GameStatus _status = new();
         [Ignored]

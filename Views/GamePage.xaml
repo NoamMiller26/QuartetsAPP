@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="Quartets.Views.GamePage"
             xmlns:vm="clr-namespace:Quartets.ViewModels"
+                 xmlns:views="clr-namespace:Quartets.Views"
 Title="GamePage"
 x:DataType="vm:GamePageVM">
     <VerticalStackLayout>
@@ -11,5 +12,13 @@ x:DataType="vm:GamePageVM">
         HorizontalOptions="Center"
         Text="{Binding MyName}"
         TextColor="Red" />
+        <CollectionView ItemsSource="{Binding Players}">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <views:PlayerView Player="{Binding}" />
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
     </VerticalStackLayout>
 </ContentPage>

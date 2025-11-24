@@ -1,13 +1,27 @@
-﻿using System;
+﻿using Quartets.ModelLogic;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Quartets.Models
 {
     public abstract class PlayerModel
     {
-        public string Name { get; set; } = string.Empty;
+        private readonly SetOfCards setCards = new();
+        private readonly Random random = new Random();
+
+        public List<Card> Hand { get; private set; } = new();
+        public string Name { get; private set; }
+
+        public PlayerModel(string name)
+        {
+            Name = name;
+
+            // מחלקים 4 קלפים אקראיים לשחקן
+            for (int i = 0; i < 4; i++)
+            {
+                Card newCard = setCards.GetRandomCard();
+                Hand.Add(newCard);
+            }
+        }
     }
 }

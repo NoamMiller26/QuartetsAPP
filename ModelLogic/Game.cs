@@ -26,6 +26,7 @@ namespace Quartets.ModelLogic
             UpdateStatus();
 
         }
+
         public Game(NumberOfPlayers selectedNumberOfPlayers)
         {
             HostName = new User().UserName;
@@ -35,10 +36,22 @@ namespace Quartets.ModelLogic
             CurrentNumOfPlayers = 1;
             MaxNumOfPlayers = selectedNumberOfPlayers.NumPlayers;
             PlayersNames = new string[MaxNumOfPlayers];
-            PlayersArr = new Player[MaxNumOfPlayers];
-            PlayersArr[0] = new Player { Name = HostName };
-            PlayersNames[0] = HostName;
+            Players = [];
+            createPlayers();
             UpdateStatus();
+
+        }
+        private void createPlayers()
+        {
+            Players!.Add(new Player(HostName));
+            foreach (string playerName in PlayersNames!)
+            {
+                if (playerName != null)
+                {
+                    Player player = new(playerName);
+                    Players!.Add(player);
+                }
+            }
 
         }
         public Game()
@@ -75,48 +88,12 @@ namespace Quartets.ModelLogic
                 OnGameDeleted?.Invoke(this, EventArgs.Empty);
         }
 
-        private void OnChange(IDocumentSnapshot? snapshot, Exception? error)
-        {
-            Game? updatedGame = snapshot?.ToObject<Game>();
-            if (updatedGame != null)
-            {
-                IsFull = updatedGame.IsFull;
-                PlayersNames = updatedGame.PlayersNames;
-                // Update PlayersArr from PlayersNames
-                if (PlayersNames != null)
-                {
-                    if (PlayersArr == null || PlayersArr.Length != PlayersNames.Length)
-                    {
-                        PlayersArr = new Player[PlayersNames.Length];
-                    }
-                    for (int i = 0; i < PlayersNames.Length; i++)
-                    {
-                        if (!string.IsNullOrEmpty(PlayersNames[i]))
-                        {
-                            PlayersArr[i] = new Player { Name = PlayersNames[i] };
-                        }
-                    }
-                }
-                OnGameChanged?.Invoke(this, EventArgs.Empty);
-            }
-            else
-            {
-
-                MainThread.InvokeOnMainThreadAsync(() =>
-                {
-                    Shell.Current.Navigation.PopAsync();
-                    Toast.Make(Strings.GameDeleted, ToastDuration.Long).Show();
-                });
-            }
-        }
+       
+        
 
         public void UpdateGuestUser(Action<Task> OnComplete)
         {
             PlayersNames?[CurrentNumOfPlayers - 1] = MyName;
-            if (PlayersArr != null)
-            {
-                PlayersArr[CurrentNumOfPlayers - 1] = new Player { Name = MyName };
-            }
             CurrentNumOfPlayers++;
             if (CurrentNumOfPlayers == MaxNumOfPlayers)
                 IsFull = true;
@@ -137,6 +114,25 @@ namespace Quartets.ModelLogic
         public override void DeleteDocument(Action<Task> OnComplete)
         {
             fbd.DeleteDocument(Keys.GamesCollection, Id, OnComplete);
+        }
+        private void OnChange(IDocumentSnapshot? snapshot, Exception? error)
+        {
+            Game? updatedGame = snapshot?.ToObject<Game>();
+            if (updatedGame != null)
+            {
+                IsFull = updatedGame.IsFull;
+                PlayersNames = updatedGame.PlayersNames;
+                OnGameChanged?.Invoke(this, EventArgs.Empty);
+            }
+            else
+            {
+
+                MainThread.InvokeOnMainThreadAsync(() =>
+                {
+                    Shell.Current.Navigation.PopAsync();
+                    Toast.Make(Strings.GameDeleted, ToastDuration.Long).Show();
+                });
+            }
         }
     }
 }

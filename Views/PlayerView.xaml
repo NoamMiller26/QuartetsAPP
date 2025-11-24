@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Quartets.Views.PlayerView"
+             xmlns:vm="clr-namespace:Quartets.ViewModels"
+             x:DataType="vm:PlayerVM"
+             xmlns:m="clr-namespace:Quartets.Models">
+
+    <Frame Padding="10"
+           CornerRadius="12"
+           BackgroundColor="#eeeeee"
+           HasShadow="True"
+           Margin="5">
+
+        <VerticalStackLayout Spacing="5">
+
+            <!-- שם השחקן -->
+            <Label Text="{Binding Name}"
+                   TextColor="Black"
+                   FontAttributes="Bold"
+                   FontSize="18" />
+
+            <!-- קלפי השחקן -->
+            <CollectionView ItemsSource="{Binding HandObservable}"
+                            ItemsLayout="HorizontalList"
+                            HeightRequest="120"
+                            HorizontalOptions="Fill"
+                            SelectionMode="Single">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="m:CardModel">
+                        <ImageButton Source="{Binding Source}"
+                                     Aspect="AspectFit"
+                                     WidthRequest="100"
+                                     HeightRequest="100" />
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+        </VerticalStackLayout>
+
+    </Frame>
+</ContentView>

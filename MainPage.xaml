@@ -45,32 +45,27 @@
                 ItemsSource="{Binding GameTimes}"
                 SelectedItem="{Binding SelectedGameTime}" />
 
-            <ListView ItemsSource="{Binding GamesList}">
+            <ListView ItemsSource="{Binding GamesList}" SelectedItem="{Binding SelectedItem}">
                 <ListView.ItemTemplate>
                     <DataTemplate x:DataType="m:GameModel">
                         <ViewCell>
                             <Grid ColumnDefinitions="*,2*,0.5*">
                                 <Label
-                                    Grid.Column="0"
-                                    Margin="20,0,0,0"
-                                    FontAttributes="Bold"
-                                    FontSize="20"
-                                    HorizontalTextAlignment="Start"
-                                    Text="{Binding HostName}" />
+                    Grid.Column="0"
+                    Margin="20,0,0,0"
+                    FontAttributes="Bold"
+                    FontSize="20"
+                    HorizontalTextAlignment="Start"
+                    Text="{Binding HostName}" />
                                 <Label
-                                    Grid.Column="1"
-                                    FontSize="20"
-                                    Text="{Binding Created}" />
+                    Grid.Column="1"
+                    FontSize="20"
+                    Text="{Binding Created}" />
                                 <Label
-                                    Grid.Column="2"
-                                    FontSize="20"
-                                    HorizontalOptions="Center"
-                                    Text="{Binding NumOfPlayersName}" />
-                                <Label
-                                    Grid.Column="2"
-                                    FontSize="20"
-                                    HorizontalOptions="Center"
-                                    Text="{Binding TimeName}" />
+                    Grid.Column="2"
+                    FontSize="20"
+                    HorizontalOptions="Center"
+                    Text="{Binding NumOfPlayersName}" />
                             </Grid>
                         </ViewCell>
                     </DataTemplate>
