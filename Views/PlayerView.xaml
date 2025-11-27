@@ -3,8 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="Quartets.Views.PlayerView"
              xmlns:vm="clr-namespace:Quartets.ViewModels"
-             x:DataType="vm:PlayerVM"
-             xmlns:m="clr-namespace:Quartets.Models">
+             xmlns:m="clr-namespace:Quartets.Models"
+             x:DataType="vm:PlayerVM">
 
     <Frame Padding="10"
            CornerRadius="12"
@@ -18,14 +18,14 @@
             <Label Text="{Binding Name}"
                    TextColor="Black"
                    FontAttributes="Bold"
-                   FontSize="18" />
+                   FontSize="18"
+                   HorizontalOptions="Center" />
 
-            <!-- קלפי השחקן -->
+            <!-- הקלפים -->
             <CollectionView ItemsSource="{Binding HandObservable}"
                             ItemsLayout="HorizontalList"
-                            HeightRequest="120"
-                            HorizontalOptions="Fill"
-                            SelectionMode="Single">
+                            HeightRequest="120">
+
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="m:CardModel">
                         <ImageButton Source="{Binding Source}"
@@ -34,6 +34,7 @@
                                      HeightRequest="100" />
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
+
             </CollectionView>
 
         </VerticalStackLayout>

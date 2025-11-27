@@ -56,6 +56,7 @@ namespace Quartets.ModelLogic
         }
         public Game()
         {
+            Players = [];
             UpdateStatus();
         }
         protected override void UpdateStatus()
@@ -78,6 +79,7 @@ namespace Quartets.ModelLogic
         public override void RemoveSnapShotListener()
         {
             ilr?.Remove();
+            action = Actions.Deleted;
             DeleteDocument(OnComplete);
         }
 
@@ -85,11 +87,12 @@ namespace Quartets.ModelLogic
         private void OnComplete(Task task)
         {
             if (task.IsCompletedSuccessfully)
-                OnGameDeleted?.Invoke(this, EventArgs.Empty);
+                if (action == Actions.Deleted)
+                    OnGameDeleted?.Invoke(this, EventArgs.Empty);
         }
 
-       
-        
+
+
 
         public void UpdateGuestUser(Action<Task> OnComplete)
         {
@@ -109,6 +112,7 @@ namespace Quartets.ModelLogic
                 {  nameof(CurrentNumOfPlayers), CurrentNumOfPlayers }
             };
             fbd.UpdateFields(Keys.GamesCollection, Id, dict, OnComplete);
+            action = Actions.Deleted;
         }
 
         public override void DeleteDocument(Action<Task> OnComplete)

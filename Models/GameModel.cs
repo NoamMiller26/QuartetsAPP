@@ -4,11 +4,24 @@ using Plugin.CloudFirestore.Attributes;
 using Quartets.ModelLogic;
 using Quartets.ModelsLogic;
 using System.Collections.ObjectModel;
+using static Quartets.Models.CardModel;
+
 
 namespace Quartets.Models
 {
     public abstract class GameModel
     {
+        protected enum Actions { Changed, Deleted }
+        protected Actions action = Actions.Changed;
+        protected Card openedCard = new(Shapes.Diamond, 4);
+        [Ignored]
+        public ImageSource? OpendCardImageSource
+        {
+            get
+            {
+                return openedCard?.Source;
+            }
+        }
         protected IListenerRegistration? ilr;
         private readonly Games Games = new();
         protected FBData fbd = new();

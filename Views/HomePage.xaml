@@ -7,6 +7,7 @@
     xmlns:vm="clr-namespace:Quartets.ViewModels"
     Title="HomePage"
     x:DataType="vm:HomePageVM"
+       BackgroundImageSource="background2.png"
    >
     <VerticalStackLayout Spacing="20">
         <Button HorizontalOptions="End" BackgroundColor="Transparent">

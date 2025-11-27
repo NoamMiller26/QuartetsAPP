@@ -5,7 +5,8 @@
             xmlns:vm="clr-namespace:Quartets.ViewModels"
                  xmlns:views="clr-namespace:Quartets.Views"
 Title="GamePage"
-x:DataType="vm:GamePageVM">
+x:DataType="vm:GamePageVM"
+                BackgroundImageSource="background2.png">
     <VerticalStackLayout>
        
         <Label
@@ -19,6 +20,6 @@ x:DataType="vm:GamePageVM">
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
-
+        <Grid x:Name="grdBoard" HorizontalOptions="Center" RowSpacing="3" ColumnSpacing="3"/>
     </VerticalStackLayout>
 </ContentPage>

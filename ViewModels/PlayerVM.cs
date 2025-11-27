@@ -1,5 +1,5 @@
-﻿using Quartets.ModelLogic;
-using Quartets.Models;
+﻿using Quartets.Models;
+using Quartets.ModelLogic;
 using System.Collections.ObjectModel;
 
 namespace Quartets.ViewModels
@@ -8,17 +8,14 @@ namespace Quartets.ViewModels
     {
         private readonly Player player;
 
+        public string Name => player.Name;
+
+        // נקשר ל-UI ישירות לאוסף של השחקן
+        public ObservableCollection<Card> HandObservable => player.HandObservable;
+
         public PlayerVM(Player player)
         {
             this.player = player;
-
-            // העתקה של ה־ObservableCollection מה־Model
-            HandObservable = player.HandObservable;
         }
-
-        public string Name => player.Name;
-
-        // קלפים של השחקן
-        public ObservableCollection<Card> HandObservable { get; private set; }
     }
 }
