@@ -4,49 +4,57 @@ using Quartets.ModelLogic;
 using Quartets.Models;
 using Quartets.ModelsLogic;
 using System.Collections.ObjectModel;
+using System.Windows.Input;
 
 namespace Quartets.ViewModels
 {
     public partial class GamePageVM : ObservableObject
     {
         private readonly Game game;
-        private readonly Board PlayerBoard = new();
+        private readonly Board playerBoard;
+        public string MyName;
+        public ObservableCollection<Player> Players { get => game.Players; set => game.Players = value; }
+        public ObservableCollection<PlayerVM> OtherPlayers { get => game.OtherPlayers; set => game.OtherPlayers = value; }
+        public ICommand NextTurnCommand => new Command(NextTurn);
+        public string CurrentStatus => game.CurrentStatus;
+        public bool IsMyTurn => CurrentPlayer.IsCurrentTurn;
+        public Player CurrentPlayer { get => game.CurrentPlayer; set => game.CurrentPlayer = value; }
+        public PlayerVM CurrentPlayerVM { get; set; }
+        public ObservableCollection<Card> PlayerHand { get; } = new ObservableCollection<Card>();
 
-        public string MyName => game.MyName;
-        public string StatusMessage => game.StatusMessage;
 
-        public ObservableCollection<PlayerVM> Players { get; } = new();
-
-        public ObservableCollection<Card> PlayerHand { get; } = new();
-
-        public GamePageVM(Game game, Grid board)
+        public GamePageVM(Game game)
         {
             this.game = game;
-            game.OnGameChanged += OnGameChanged;
-        
-
-            // טעינת כל השחקנים ללא foreach
-            for (int i = 0; i < game.Players.Count; i++)
-            {
-                Player p = game.Players[i];
-                PlayerVM vm = new PlayerVM(p);
-                Players.Add(vm);
-            }
-
+            playerBoard = new Board();
+            MyName = game.MyName;        
+            CurrentPlayerVM = new PlayerVM(game.CurrentPlayer);           
             if (!game.IsHostUser)
-                game.UpdateGuestUser(OnComplete);
-
-            // טעינת יד השחקן
-            for (int i = 0; i < PlayerBoard.Hand.Count; i++)
             {
-                Card card = PlayerBoard.Hand[i];
+                game.UpdateGuestUser(OnComplete);
+            }          
+            int handCount = playerBoard.Hand.Count;
+            for (int i = 0; i < handCount; i++)
+            {
+                Card card = playerBoard.Hand[i];
                 PlayerHand.Add(card);
             }
+
+            game.OnGameChanged += OnGameChanged;
         }
 
-        private void OnGameChanged(object? sender, EventArgs e)
+
+        private void NextTurn(object obj)
         {
-            // UI update
+            game.NextTurn();
+            OnPropertyChanged(nameof(CurrentStatus));
+        }
+
+        private void OnGameChanged(object sender, EventArgs e)
+        {
+            OnPropertyChanged(nameof(Players));
+            OnPropertyChanged(nameof(CurrentStatus));
+            OnPropertyChanged(nameof(IsMyTurn));
         }
 
         private void OnComplete(Task task)
@@ -58,34 +66,39 @@ namespace Quartets.ViewModels
             }
         }
 
+
         public void RequestCard(Card requestedCard, Board opponentBoard)
         {
-            bool success = PlayerBoard.RequestCardFromOpponent(requestedCard, opponentBoard);
+            bool success = playerBoard.RequestCardFromOpponent(requestedCard, opponentBoard);
 
             if (success)
             {
                 PlayerHand.Clear();
 
-                for (int i = 0; i < PlayerBoard.Hand.Count; i++)
+                int handCount = playerBoard.Hand.Count;
+                for (int i = 0; i < handCount; i++)
                 {
-                    Card card = PlayerBoard.Hand[i];
+                    Card card = playerBoard.Hand[i];
                     PlayerHand.Add(card);
                 }
             }
 
-            List<List<Card>> completedSets = PlayerBoard.CheckCompletedSets();
+            List<List<Card>> completedSets = playerBoard.CheckCompletedSets();
 
-            for (int i = 0; i < completedSets.Count; i++)
+            int setsCount = completedSets.Count;
+            for (int i = 0; i < setsCount; i++)
             {
                 List<Card> set = completedSets[i];
 
-                for (int j = 0; j < set.Count; j++)
+                int setSize = set.Count;
+                for (int j = 0; j < setSize; j++)
                 {
                     Card card = set[j];
                     PlayerHand.Remove(card);
                 }
             }
         }
+
 
         public void AddSnapshotListener()
         {

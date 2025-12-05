@@ -9,14 +9,18 @@ namespace Quartets.ModelLogic
 {
     public class Games : GamesModel
     {
-        public void AddGame()
+        public override void AddGame()
         {
+            int size = (new Game()).MaxNumOfPlayers;
             IsBusy = true;
-            CurrentGame = new(SelectedNumberOfPlayers);
-                currentGame = new(SelectedGameTime)
-                {
+            CurrentGame = new(SelectedNumberOfPlayers)
+            {
                 IsHostUser = true
             };
+
+            CurrentGame.PlayersNames?[0] = (new User()).UserName;
+            CurrentGame.PlayersIds?[0] = fbd.UserId;
+
             currentGame?.OnGameDeleted += OnGameDeleted;
             CurrentGame.SetDocument(OnComplete);
         }
@@ -32,7 +36,7 @@ namespace Quartets.ModelLogic
         {
 
         }
-        private void OnComplete(Task task)
+        protected override void OnComplete(Task task)
         {
             IsBusy = false;
             OnGameAdded?.Invoke(this, CurrentGame!);
@@ -58,6 +62,7 @@ namespace Quartets.ModelLogic
                 if (game != null)
                 {
                     game.Id = ds.Id;
+                    game.Init();
                     GamesList.Add(game);
                 }
             }

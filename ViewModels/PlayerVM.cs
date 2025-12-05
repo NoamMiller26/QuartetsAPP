@@ -6,7 +6,7 @@ namespace Quartets.ViewModels
 {
     public class PlayerVM
     {
-        private readonly Player player;
+        public Player player;
 
         public string Name => player.Name;
 

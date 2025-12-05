@@ -7,19 +7,33 @@
 Title="GamePage"
 x:DataType="vm:GamePageVM"
                 BackgroundImageSource="background2.png">
-    <VerticalStackLayout>
-       
-        <Label
-        HorizontalOptions="Center"
-        Text="{Binding MyName}"
-        TextColor="Red" />
-        <CollectionView ItemsSource="{Binding Players}">
+    <StackLayout>
+        <Label Text="{Binding CurrentStatus}" TextColor="Black"/>
+        <CollectionView ItemsSource="{Binding OtherPlayers}">
+            <CollectionView.ItemsLayout>
+                <GridItemsLayout Orientation="Vertical" Span="2" />
+            </CollectionView.ItemsLayout>
+
             <CollectionView.ItemTemplate>
                 <DataTemplate>
-                    <views:PlayerView Player="{Binding}" />
+                    <views:PlayerView Player="{Binding}" HeightRequest="250" />
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
-        <Grid x:Name="grdBoard" HorizontalOptions="Center" RowSpacing="3" ColumnSpacing="3"/>
-    </VerticalStackLayout>
+
+
+
+        <views:PlayerView
+      Player="{Binding CurrentPlayerVM}"
+      HeightRequest="150"/>
+        <Button 
+    IsEnabled="{Binding IsMyTurn}"
+    AbsoluteLayout.LayoutBounds="0.5,0.95,140,45"
+    AbsoluteLayout.LayoutFlags="PositionProportional"
+    BackgroundColor="DarkBlue"
+    Command="{Binding NextTurnCommand}"
+    CornerRadius="15"
+    Text="Next Turn"
+    TextColor="White" />
+    </StackLayout>
 </ContentPage>

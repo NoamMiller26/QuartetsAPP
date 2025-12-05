@@ -6,6 +6,7 @@ using CommunityToolkit.Maui.Core;
 using Microsoft.Maui.Controls;
 using Plugin.CloudFirestore;
 using Quartets.Models;
+using Quartets.ViewModels;
 using System.Linq;
 
 
@@ -13,8 +14,24 @@ namespace Quartets.ModelLogic
 {
     public class Game : GameModel
     {
-       
-        protected override GameStatus Status => _status;
+
+        public override string CurrentStatus
+        {
+
+            get => CurrentPlayer.IsCurrentTurn ? "play please" : "please wait";
+            set;
+        }
+        public override void NextTurn()
+        {
+
+            Players[CurrentPlayerIndex].IsCurrentTurn = false;
+
+            CurrentPlayerIndex = (CurrentPlayerIndex + 1) % Players.Count;
+
+            Players[CurrentPlayerIndex].IsCurrentTurn = true;
+
+            OnGameChanged?.Invoke(this, EventArgs.Empty);
+        }
 
         public Game(GameTime selectedGameTime)
         {
@@ -22,9 +39,6 @@ namespace Quartets.ModelLogic
             IsHostUser = true;
             Time = selectedGameTime.Time;
             Created = DateTime.Now;
-
-            UpdateStatus();
-
         }
 
         public Game(NumberOfPlayers selectedNumberOfPlayers)
@@ -35,60 +49,78 @@ namespace Quartets.ModelLogic
             IsFull = false;
             CurrentNumOfPlayers = 1;
             MaxNumOfPlayers = selectedNumberOfPlayers.NumPlayers;
+            CurrentPlayerIndex = 0;
             PlayersNames = new string[MaxNumOfPlayers];
+            PlayersIds = new string[MaxNumOfPlayers];
+            FillDummes();
             Players = [];
+            OtherPlayers = [];
             createPlayers();
-            UpdateStatus();
-
         }
-        private void createPlayers()
+
+        private void FillDummes()
         {
-            Players!.Add(new Player(HostName));
+            for (int i = 0; i < MaxNumOfPlayers; i++)
+            {
+                PlayersNames[i] = "";
+                PlayersIds[i] = "";
+            }
+        }
+        protected override void createPlayers()
+        {
+            int i = 0;
             foreach (string playerName in PlayersNames!)
             {
-                if (playerName != null)
+                if (playerName != "")
                 {
-                    Player player = new(playerName);
+                    Player player = new(playerName, PlayersIds[i++]);
                     Players!.Add(player);
-                }
-            }
+                    if (player.Id == fbd.UserId)
+                    {
+                        CurrentPlayer = player;
+                    }
+                    else
+                    {
+                        OtherPlayers.Add(new PlayerVM(player));
+                    }
 
+                }
+
+            }
+            if (CurrentPlayer == null)
+            {
+                CurrentPlayer = new Player(MyName, fbd.UserId);
+            }
         }
         public Game()
         {
-            Players = [];
-            UpdateStatus();
+         
+          
         }
-        protected override void UpdateStatus()
+        public override void Init()
         {
-            _status.CurrentStatus = IsHostUser && IsHostTurn || !IsHostUser && !IsHostTurn ?
-                GameStatus.Status.Play : GameStatus.Status.Wait;
-        }       
-    public override void SetDocument(Action<Task> OnComplete)
+            createPlayers();
+        }
+        public override void SetDocument(Action<Task> OnComplete)
         {
             Id = fbd.SetDocument(this, Keys.GamesCollection, Id, OnComplete);
         }
-
-
         public override void AddSnapShotListener()
         {
             ilr = fbd.AddSnapshotListener(Keys.GamesCollection, Id, OnChange);
-
         }
-
         public override void RemoveSnapShotListener()
         {
             ilr?.Remove();
-            action = Actions.Deleted;
             DeleteDocument(OnComplete);
         }
+
 
 
         private void OnComplete(Task task)
         {
             if (task.IsCompletedSuccessfully)
-                if (action == Actions.Deleted)
-                    OnGameDeleted?.Invoke(this, EventArgs.Empty);
+                OnGameDeleted?.Invoke(this, EventArgs.Empty);
         }
 
 
@@ -96,10 +128,22 @@ namespace Quartets.ModelLogic
 
         public void UpdateGuestUser(Action<Task> OnComplete)
         {
-            PlayersNames?[CurrentNumOfPlayers - 1] = MyName;
+            foreach (string id in PlayersIds)
+            {
+                if (id == fbd.UserId)
+                    return;
+            }
+
+            Console.WriteLine(CurrentNumOfPlayers + "/" + MaxNumOfPlayers);
+            PlayersNames?[CurrentNumOfPlayers] = MyName;
+            PlayersIds?[CurrentNumOfPlayers] = fbd.UserId;
+            Console.WriteLine("init players");
             CurrentNumOfPlayers++;
             if (CurrentNumOfPlayers == MaxNumOfPlayers)
+            {
                 IsFull = true;
+            }
+            Console.WriteLine("joining");
             UpdateFireBaseJoinGame(OnComplete);
         }
 
@@ -108,11 +152,11 @@ namespace Quartets.ModelLogic
             Dictionary<string, object> dict = new()
             {
                 { nameof(PlayersNames), PlayersNames! },
+                { nameof(PlayersIds), PlayersIds! },
                 { nameof(IsFull), IsFull },
                 {  nameof(CurrentNumOfPlayers), CurrentNumOfPlayers }
             };
             fbd.UpdateFields(Keys.GamesCollection, Id, dict, OnComplete);
-            action = Actions.Deleted;
         }
 
         public override void DeleteDocument(Action<Task> OnComplete)
@@ -122,11 +166,24 @@ namespace Quartets.ModelLogic
         private void OnChange(IDocumentSnapshot? snapshot, Exception? error)
         {
             Game? updatedGame = snapshot?.ToObject<Game>();
+            if (Players.Count() == MaxNumOfPlayers && CurrentPlayerIndex != updatedGame.CurrentPlayerIndex)
+            {
+                int prevCurrnetPlayerIndex = CurrentPlayerIndex;
+                CurrentPlayerIndex = updatedGame.CurrentPlayerIndex;
+                Players[CurrentPlayerIndex].IsCurrentTurn = true;
+                Players[prevCurrnetPlayerIndex].IsCurrentTurn = false;
+            }
             if (updatedGame != null)
             {
+                if (IsFull == false && updatedGame.IsFull == true)
+                {
+                    Players[0].IsCurrentTurn = true;
+                    Console.WriteLine(Players[0].IsCurrentTurn);
+                }
                 IsFull = updatedGame.IsFull;
                 PlayersNames = updatedGame.PlayersNames;
-                OnGameChanged?.Invoke(this, EventArgs.Empty);
+                PlayersIds = updatedGame.PlayersIds;
+
             }
             else
             {

@@ -1,32 +1,34 @@
-using Quartets.ModelLogic;
+﻿using Quartets.ModelLogic;
 using Quartets.ViewModels;
 
 namespace Quartets.Views;
 
 public partial class PlayerView : ContentView
 {
+    public PlayerView()
+    {
+        InitializeComponent();
+    }
     public static readonly BindableProperty PlayerProperty =
         BindableProperty.Create(
             nameof(Player),
-            typeof(Player),
+            typeof(PlayerVM),
             typeof(PlayerView),
             propertyChanged: OnPlayerChanged);
 
-    public Player Player
+    public PlayerVM Player
     {
-        get => (Player)GetValue(PlayerProperty);
+        get => (PlayerVM)GetValue(PlayerProperty);
         set => SetValue(PlayerProperty, value);
     }
 
     private static void OnPlayerChanged(BindableObject bindable, object oldValue, object newValue)
     {
-        var view = (PlayerView)bindable;
-        if (newValue is Player player)
-            view.BindingContext = new PlayerVM(player);
-    }
-
-    public PlayerView()
-    {
-        InitializeComponent();
+        var control = (PlayerView)bindable;
+        if (newValue == null)
+        {
+            return;
+        }
+        control.BindingContext = newValue;  // 👈 This binds the WHOLE view to the Player object
     }
 }
