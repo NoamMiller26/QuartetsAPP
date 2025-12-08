@@ -20,12 +20,11 @@ namespace Quartets.ViewModels
         // עבור הצגת גב קלפים (רשימה של פריטים לשכפול התמונות)
         public ObservableCollection<int> PlaceHolderBacks { get; } = new ObservableCollection<int>();
 
-        private GameVM _gameVM;
+     
 
-        public PlayerVM(Player p, GameVM gameVM, bool isLocal = false)
+        public PlayerVM(Player p,  bool isLocal = false)
         {
             player = p;
-            _gameVM = gameVM;
             IsLocalPlayer = isLocal;
 
             // מלא רצף של גבים לפי מספר הקלפים (עדפתי עד 6 לשונה)
@@ -51,10 +50,10 @@ namespace Quartets.ViewModels
         {
             // בקשה מהשחקן המקומי לבחור איזה קלף לשאול וממי.
             // כאן נשלח קריאה ל-GameVM לטפל בלוגיקה.
-            if (_gameVM == null) return;
+          
 
             // דוגמה: מוציאים חיבור UI פשוט לבחירה. כאן אנו מניחים שה-GamePage יטפל בבחירה
-            await _gameVM.HandleAskRequest(this);
+           
         }
     }
 }
