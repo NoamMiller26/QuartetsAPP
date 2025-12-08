@@ -5,4 +5,5 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:cnv="clr-namespace:Quartets.Converters">
     <cnv:BoolToIconConverter x:Key="passwordIconConvert" />
+    <cnv:InverseBoolConverter x:Key="InverseBoolConverter" />
 </ResourceDictionary>

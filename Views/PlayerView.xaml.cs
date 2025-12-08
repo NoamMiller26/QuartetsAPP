@@ -1,34 +1,21 @@
-﻿using Quartets.ModelLogic;
+﻿using System;
+using Microsoft.Maui.Controls;
 using Quartets.ViewModels;
 
-namespace Quartets.Views;
-
-public partial class PlayerView : ContentView
+namespace Quartets.Views
 {
-    public PlayerView()
+    public partial class PlayerView : ContentView
     {
-        InitializeComponent();
-    }
-    public static readonly BindableProperty PlayerProperty =
-        BindableProperty.Create(
-            nameof(Player),
-            typeof(PlayerVM),
-            typeof(PlayerView),
-            propertyChanged: OnPlayerChanged);
-
-    public PlayerVM Player
-    {
-        get => (PlayerVM)GetValue(PlayerProperty);
-        set => SetValue(PlayerProperty, value);
-    }
-
-    private static void OnPlayerChanged(BindableObject bindable, object oldValue, object newValue)
-    {
-        var control = (PlayerView)bindable;
-        if (newValue == null)
+        public PlayerView()
         {
-            return;
+            InitializeComponent();
         }
-        control.BindingContext = newValue;  // 👈 This binds the WHOLE view to the Player object
+
+        // מאפשר לקבוע את BindingContext מחוץ ל-View
+        public PlayerVM VM
+        {
+            get => BindingContext as PlayerVM;
+            set => BindingContext = value;
+        }
     }
 }

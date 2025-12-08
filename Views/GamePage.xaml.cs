@@ -1,29 +1,16 @@
-using Quartets.ModelLogic;
+using Microsoft.Maui.Controls;
 using Quartets.ViewModels;
 
-namespace Quartets.Views;
-
-public partial class GamePage : ContentPage
+namespace Quartets.Views
 {
-    private readonly GamePageVM gpVM;
-    public GamePage(Game game)
+    public partial class GamePage : ContentPage
     {
-     
-        InitializeComponent();
-
-        gpVM = new GamePageVM(game);
-     
-        BindingContext = gpVM;
-    }
-    protected override void OnAppearing()
-    {
-        base.OnAppearing();
-        gpVM.AddSnapshotListener();
-    }
-
-    protected override void OnDisappearing()
-    {
-        gpVM.RemoveSnapshotListener();
-        base.OnDisappearing();
+        private GameVM _vm;
+        public GamePage(GameVM vm)
+        {
+            InitializeComponent();
+            _vm = vm;
+            BindingContext = _vm;
+        }
     }
 }

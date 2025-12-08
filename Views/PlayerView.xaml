@@ -1,43 +1,59 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="Quartets.Views.PlayerView"
-             xmlns:vm="clr-namespace:Quartets.ViewModels"
-             xmlns:m="clr-namespace:Quartets.Models"
-             x:DataType="vm:PlayerVM">
+<ContentView
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    x:Class="Quartets.Views.PlayerView"
+    x:Name="Root">
 
-    <Frame Padding="10"
-           CornerRadius="12"
-           BackgroundColor="#eeeeee"
-           HasShadow="True"
-           Margin="5">
+    <Frame Padding="6" Margin="8" CornerRadius="12" BackgroundColor="WhiteSmoke">
+        <VerticalStackLayout>
 
-        <VerticalStackLayout Spacing="5">
+            <Label Text="{Binding Name}" FontAttributes="Bold" HorizontalOptions="Center"/>
 
-            <!-- שם השחקן -->
-            <Label Text="{Binding Name}"
-                   TextColor="Black"
-                   FontAttributes="Bold"
-                   FontSize="18"
-                   HorizontalOptions="Center" />
-
-            <!-- הקלפים -->
+            <!-- אם זה השחקן המקומי - מציגים את כל הקלפים -->
             <CollectionView ItemsSource="{Binding HandObservable}"
+                            IsVisible="{Binding IsLocalPlayer}"
                             ItemsLayout="HorizontalList"
-                            HeightRequest="120">
-
+                            HeightRequest="80">
                 <CollectionView.ItemTemplate>
-                    <DataTemplate x:DataType="m:CardModel">
-                        <ImageButton Source="{Binding Source}"
-                                     Aspect="AspectFit"
-                                     WidthRequest="100"
-                                     HeightRequest="100" />
+                    <DataTemplate>
+                        <Frame Padding="6" Margin="4" HasShadow="False" BackgroundColor="White">
+                            <Image Source="{Binding ImageSource}" WidthRequest="48" HeightRequest="72"/>
+                        </Frame>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
-
             </CollectionView>
 
-        </VerticalStackLayout>
+            <!-- אם לא שחקן מקומי - מציגים גב קלפים ושורה של מספר הקלפים -->
+            <Grid IsVisible="{Binding IsLocalPlayer, Converter={StaticResource InverseBoolConverter}}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
 
+                <!-- תצוגת גב קלף חוזרת לפי מספר הקלפים -->
+                <CollectionView x:Name="BacksList"
+                                ItemsSource="{Binding PlaceHolderBacks}"
+                                ItemsLayout="HorizontalList"
+                                HeightRequest="80"
+                                Grid.Column="0">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Image Source="card_back.png" WidthRequest="48" HeightRequest="72" Margin="2"/>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <Label Text="{Binding HandObservable.Count, StringFormat='Cards: {0}'}" 
+                       Grid.Column="1" 
+                       VerticalOptions="Center"/>
+            </Grid>
+
+            <!-- כפתור לשאול את השחקן (מוצג רק עבור שחקנים אחרים) -->
+            <Button Text="Ask" 
+                    Command="{Binding AskCommand}" 
+                    IsVisible="{Binding IsLocalPlayer, Converter={StaticResource InverseBoolConverter}}" />
+
+        </VerticalStackLayout>
     </Frame>
 </ContentView>

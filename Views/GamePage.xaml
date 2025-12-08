@@ -1,39 +1,28 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="Quartets.Views.GamePage"
-            xmlns:vm="clr-namespace:Quartets.ViewModels"
-                 xmlns:views="clr-namespace:Quartets.Views"
-Title="GamePage"
-x:DataType="vm:GamePageVM"
-                BackgroundImageSource="background2.png">
-    <StackLayout>
-        <Label Text="{Binding CurrentStatus}" TextColor="Black"/>
-        <CollectionView ItemsSource="{Binding OtherPlayers}">
-            <CollectionView.ItemsLayout>
-                <GridItemsLayout Orientation="Vertical" Span="2" />
-            </CollectionView.ItemsLayout>
+             xmlns:views="clr-namespace:Quartets.Views"
+             x:Class="Quartets.Views.GamePage">
 
-            <CollectionView.ItemTemplate>
-                <DataTemplate>
-                    <views:PlayerView Player="{Binding}" HeightRequest="250" />
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
+    <ScrollView>
+        <VerticalStackLayout Padding="12">
+            <Label Text="Game Page" FontSize="20" HorizontalOptions="Center" />
 
+            <!-- רשימה של שחקנים -->
+            <CollectionView ItemsSource="{Binding Players}" ItemsLayout="VerticalList">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <views:PlayerView BindingContext="{Binding}" />
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
 
+            <!-- הקופה וכפתור תור -->
+            <HorizontalStackLayout HorizontalOptions="Center" Margin="10">
+                <Label Text="{Binding DeckCount, StringFormat='Deck: {0}'}" VerticalOptions="Center"/>
+                <Button Text="Next Turn" Command="{Binding NextTurnCommand}" Margin="10,0"/>
+            </HorizontalStackLayout>
 
-        <views:PlayerView
-      Player="{Binding CurrentPlayerVM}"
-      HeightRequest="150"/>
-        <Button 
-    IsEnabled="{Binding IsMyTurn}"
-    AbsoluteLayout.LayoutBounds="0.5,0.95,140,45"
-    AbsoluteLayout.LayoutFlags="PositionProportional"
-    BackgroundColor="DarkBlue"
-    Command="{Binding NextTurnCommand}"
-    CornerRadius="15"
-    Text="Next Turn"
-    TextColor="White" />
-    </StackLayout>
+        </VerticalStackLayout>
+    </ScrollView>
 </ContentPage>
