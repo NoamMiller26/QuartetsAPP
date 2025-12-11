@@ -2,27 +2,70 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:views="clr-namespace:Quartets.Views"
-             x:Class="Quartets.Views.GamePage">
+             x:Class="Quartets.Views.GamePage"
+             BackgroundColor="#F4F1FF">
 
-    <ScrollView>
-        <VerticalStackLayout Padding="12">
-            <Label Text="Game Page" FontSize="20" HorizontalOptions="Center" />
-
-            <!-- רשימה של שחקנים -->
-            <CollectionView ItemsSource="{Binding Players}" ItemsLayout="VerticalList">
-                <CollectionView.ItemTemplate>
-                    <DataTemplate>
-                        <views:PlayerView BindingContext="{Binding}" />
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
-
-            <!-- הקופה וכפתור תור -->
-            <HorizontalStackLayout HorizontalOptions="Center" Margin="10">
-                <Label Text="{Binding DeckCount, StringFormat='Deck: {0}'}" VerticalOptions="Center"/>
-                <Button Text="Next Turn" Command="{Binding NextTurnCommand}" Margin="10,0"/>
-            </HorizontalStackLayout>
-
+    <Grid RowDefinitions="Auto, *" Padding="16" RowSpacing="12">
+        <!-- Header -->
+        <VerticalStackLayout Spacing="4">
+            <Label Text="Quartets" FontSize="24" FontAttributes="Bold" HorizontalOptions="Center" TextColor="#3C2E86"/>
+            <Label Text="{Binding CurrentStatus}" FontSize="14" HorizontalOptions="Center" TextColor="#6E6B7B"/>
         </VerticalStackLayout>
-    </ScrollView>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Spacing="18">
+
+                <!-- My Hand -->
+                <Frame BackgroundColor="White" CornerRadius="14" HasShadow="True" Padding="12">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="הקלפים שלי" FontAttributes="Bold" TextColor="#3C2E86"/>
+                        <CollectionView ItemsSource="{Binding PlayerHand}"
+                                        ItemsLayout="HorizontalList"
+                                        HeightRequest="130">
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate>
+                                    <Frame Padding="6" Margin="4" HasShadow="False" BackgroundColor="#EFEAFE" CornerRadius="10" BorderColor="#C6B8FF">
+                                        <Image Source="{Binding Source}" WidthRequest="70" HeightRequest="100" Aspect="AspectFit"/>
+                                    </Frame>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                            <CollectionView.EmptyView>
+                                <Label Text="אין לך קלפים כרגע" TextColor="#9A8FC3" HorizontalOptions="Center"/>
+                            </CollectionView.EmptyView>
+                        </CollectionView>
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Opponents -->
+                <Frame BackgroundColor="White" CornerRadius="14" HasShadow="True" Padding="12">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="שחקנים אחרים" FontAttributes="Bold" TextColor="#3C2E86"/>
+                        <CollectionView ItemsSource="{Binding Opponents}" ItemsLayout="VerticalList">
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate>
+                                    <views:PlayerView BindingContext="{Binding}" />
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                            <CollectionView.EmptyView>
+                                <Label Text="אין יריבים מחוברים" TextColor="#9A8FC3" HorizontalOptions="Center"/>
+                            </CollectionView.EmptyView>
+                        </CollectionView>
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Deck + Next Turn -->
+                <Frame BackgroundColor="White" CornerRadius="14" HasShadow="True" Padding="12">
+                    <HorizontalStackLayout HorizontalOptions="Center" Spacing="16">
+                        <Grid>
+                            <Frame WidthRequest="60" HeightRequest="85" BackgroundColor="#D5CCFF" CornerRadius="8" HasShadow="False" />
+                            <Label Text="{Binding DeckCount}" HorizontalOptions="Center" VerticalOptions="Center" FontAttributes="Bold" TextColor="#3C2E86"/>
+                        </Grid>
+                        <Label Text="קופה" VerticalOptions="Center" TextColor="#3C2E86"/>
+                        <Button Text="Next Turn" Command="{Binding NextTurnCommand}" BackgroundColor="#5C4BDE" TextColor="White" CornerRadius="10" Padding="16,10"/>
+                    </HorizontalStackLayout>
+                </Frame>
+
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
 </ContentPage>

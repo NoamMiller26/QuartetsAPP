@@ -8,9 +8,9 @@
         {
             NumPlayers = numPlayers;
         }
-        public NumberOfPlayers()//Change
+        public NumberOfPlayers()
         {
-            NumPlayers = 5;
+            NumPlayers = 2;
         }
     }
 }

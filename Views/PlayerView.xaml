@@ -5,10 +5,10 @@
     x:Class="Quartets.Views.PlayerView"
     x:Name="Root">
 
-    <Frame Padding="6" Margin="8" CornerRadius="12" BackgroundColor="WhiteSmoke">
-        <VerticalStackLayout>
+    <Frame Padding="8" Margin="8" CornerRadius="12" BackgroundColor="#F7F5FF" HasShadow="True">
+        <VerticalStackLayout Spacing="8">
 
-            <Label Text="{Binding Name}" FontAttributes="Bold" HorizontalOptions="Center"/>
+            <Label Text="{Binding Name}" FontAttributes="Bold" HorizontalOptions="Center" TextColor="#3C2E86"/>
 
             <!-- אם זה השחקן המקומי - מציגים את כל הקלפים -->
             <CollectionView ItemsSource="{Binding HandObservable}"
@@ -17,8 +17,8 @@
                             HeightRequest="80">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
-                        <Frame Padding="6" Margin="4" HasShadow="False" BackgroundColor="White">
-                            <Image Source="{Binding ImageSource}" WidthRequest="48" HeightRequest="72"/>
+                        <Frame Padding="6" Margin="4" HasShadow="False" BackgroundColor="#EFEAFE" CornerRadius="8" BorderColor="#C6B8FF">
+                            <Image Source="{Binding Source}" WidthRequest="48" HeightRequest="72" Aspect="AspectFit"/>
                         </Frame>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
@@ -39,20 +39,27 @@
                                 Grid.Column="0">
                     <CollectionView.ItemTemplate>
                         <DataTemplate>
-                            <Image Source="card_back.png" WidthRequest="48" HeightRequest="72" Margin="2"/>
+                            <Frame Padding="4" Margin="2" BackgroundColor="#D5CCFF" CornerRadius="6" HasShadow="False">
+                                <Image Source="card_back.png" WidthRequest="42" HeightRequest="64" Aspect="AspectFit"/>
+                            </Frame>
                         </DataTemplate>
                     </CollectionView.ItemTemplate>
                 </CollectionView>
 
                 <Label Text="{Binding HandObservable.Count, StringFormat='Cards: {0}'}" 
                        Grid.Column="1" 
-                       VerticalOptions="Center"/>
+                       VerticalOptions="Center"
+                       TextColor="#3C2E86"/>
             </Grid>
 
             <!-- כפתור לשאול את השחקן (מוצג רק עבור שחקנים אחרים) -->
             <Button Text="Ask" 
                     Command="{Binding AskCommand}" 
-                    IsVisible="{Binding IsLocalPlayer, Converter={StaticResource InverseBoolConverter}}" />
+                    IsVisible="{Binding IsLocalPlayer, Converter={StaticResource InverseBoolConverter}}"
+                    BackgroundColor="#5C4BDE"
+                    TextColor="White"
+                    CornerRadius="10"
+                    Padding="10,6" />
 
         </VerticalStackLayout>
     </Frame>

@@ -3,57 +3,80 @@ using System.Windows.Input;
 using Quartets.Models;
 using Quartets.ModelLogic;
 using System.Linq;
-
+using System;
+using Microsoft.Maui.Controls;
 
 namespace Quartets.ViewModels
 {
-    public class PlayerVM : ObservableObject
+    public partial class PlayerVM : ObservableObject
     {
-        public Player player;
+        private readonly Player player;
+        private readonly Func<PlayerVM, Task> onAsk;
+        private bool isLocalPlayer;
 
         public string Name => player.Name;
+        public string Id => player.Id;
+
+        // === תיקון 1: שימוש ב-HandObservable ===
         public ObservableCollection<Card> HandObservable => player.HandObservable;
 
-        // האם זה השחקן המקומי (למשל ה-user שנכנס)
-        public bool IsLocalPlayer { get; set; } = false;
+        public bool IsLocalPlayer
+        {
+            get => isLocalPlayer;
+            private set
+            {
+                if (isLocalPlayer != value)
+                {
+                    isLocalPlayer = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
 
-        // עבור הצגת גב קלפים (רשימה של פריטים לשכפול התמונות)
         public ObservableCollection<int> PlaceHolderBacks { get; } = new ObservableCollection<int>();
 
-     
+        public ICommand AskCommand { get; }
 
-        public PlayerVM(Player p,  bool isLocal = false)
+        public PlayerVM(Player p, bool isLocal, Func<PlayerVM, Task> onAskCallback)
         {
             player = p;
-            IsLocalPlayer = isLocal;
+            isLocalPlayer = isLocal;
+            onAsk = onAskCallback;
 
-            // מלא רצף של גבים לפי מספר הקלפים (עדפתי עד 6 לשונה)
             UpdatePlaceholders();
 
-            // דוגמה לפקודה של לשאול
-            AskCommand = new Command(async () => await ExecuteAsk());
-            // נסמן מאזין לשינויים ביד
-            HandObservable.CollectionChanged += (s, e) => UpdatePlaceholders();
+            AskCommand = new Command(async () => await ExecuteAsk(), () => !IsLocalPlayer);
+
+            // האזנה לשינויים ביד השחקן
+            player.HandObservable.CollectionChanged += PlayerHand_CollectionChanged;
+        }
+
+        private void PlayerHand_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            UpdatePlaceholders();
+            OnPropertyChanged(nameof(HandObservable));
         }
 
         private void UpdatePlaceholders()
         {
-            PlaceHolderBacks.Clear();
-            int n = HandObservable?.Count ?? 0;
-            int show = Math.Min(n, 8);
-            for (int i = 0; i < show; i++) PlaceHolderBacks.Add(i);
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                PlaceHolderBacks.Clear();
+                int n = HandObservable?.Count ?? 0;
+                int show = Math.Min(n, 8);
+                for (int i = 0; i < show; i++)
+                {
+                    PlaceHolderBacks.Add(i);
+                }
+            });
         }
 
-        public ICommand AskCommand { get; }
-
-        private async System.Threading.Tasks.Task ExecuteAsk()
+        private async Task ExecuteAsk()
         {
-            // בקשה מהשחקן המקומי לבחור איזה קלף לשאול וממי.
-            // כאן נשלח קריאה ל-GameVM לטפל בלוגיקה.
-          
-
-            // דוגמה: מוציאים חיבור UI פשוט לבחירה. כאן אנו מניחים שה-GamePage יטפל בבחירה
-           
+            if (onAsk != null)
+            {
+                await onAsk(this);
+            }
         }
     }
 }
