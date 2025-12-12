@@ -19,6 +19,7 @@ namespace Quartets.ViewModels
 
         // === תיקון 1: שימוש ב-HandObservable ===
         public ObservableCollection<Card> HandObservable => player.HandObservable;
+        public int CompletedSets => player.CompletedSets;
 
         public bool IsLocalPlayer
         {

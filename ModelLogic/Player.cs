@@ -5,29 +5,32 @@ namespace Quartets.ModelLogic
 {
     public class Player : PlayerModel
     {
-      
         public ObservableCollection<Card> HandObservable { get; private set; } = new();
+
+        public int CompletedSets { get; private set; }
+
         public Player(string playerName, string id) : base(playerName, id)
         {
             foreach (Card card in Hand)
                 HandObservable.Add(card);
         }
-        
 
-     
         public void AddCard(Card card)
         {
             Hand.Add(card);
             HandObservable.Add(card);
         }
 
-       
         public void RemoveCard(Card card)
         {
             Hand.Remove(card);
             HandObservable.Remove(card);
         }
 
+        public void AddCompletedSets(int amount)
+        {
+            CompletedSets += amount;
+        }
 
         public List<List<Card>> CheckQuartets()
         {

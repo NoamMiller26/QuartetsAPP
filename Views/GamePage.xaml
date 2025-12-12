@@ -19,6 +19,10 @@
                 <Frame BackgroundColor="White" CornerRadius="14" HasShadow="True" Padding="12">
                     <VerticalStackLayout Spacing="8">
                         <Label Text="הקלפים שלי" FontAttributes="Bold" TextColor="#3C2E86"/>
+                        <Label Text="{Binding CompletedSets, StringFormat='סטים שהושלמו: {0}'}"
+                               FontSize="12"
+                               TextColor="#6E6B7B"
+                               HorizontalOptions="Start"/>
                         <CollectionView ItemsSource="{Binding PlayerHand}"
                                         ItemsLayout="HorizontalList"
                                         HeightRequest="130">

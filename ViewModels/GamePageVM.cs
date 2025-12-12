@@ -8,6 +8,7 @@ using System.Windows.Input;
 using System.Threading.Tasks;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Maui.Controls;
 using Keyboard = Microsoft.Maui.Keyboard;
 
@@ -31,6 +32,7 @@ namespace Quartets.ViewModels
         public bool IsMyTurn => CurrentPlayer.IsCurrentTurn;
         public Player CurrentPlayer => game.CurrentPlayer;
         public int DeckCount => game.Deck.Count;
+        public int CompletedSets => game.CurrentPlayer?.CompletedSets ?? 0;
 
         public GamePageVM(Game game)
         {
@@ -77,22 +79,18 @@ namespace Quartets.ViewModels
                 return;
             }
 
-            string suit = await Shell.Current.DisplayActionSheet("איזה סוג?", "ביטול", null, "Clubs", "Diamonds", "Hearts", "Spades");
-            if (string.IsNullOrWhiteSpace(suit) || suit == "ביטול")
+            bool hasRankInHand = CurrentPlayer?.HandObservable.Any(c => c.Value == value) ?? false;
+            if (!hasRankInHand)
             {
+                await Toast.Make("אפשר לבקש רק ערך שקיים ביד שלך", ToastDuration.Short, 14).Show();
                 return;
             }
 
-            CardModel.Shapes shape = suit switch
+            bool accepted = await game.AskForCard(CurrentPlayer, opponent.Id, value);
+            if (!accepted)
             {
-                "Clubs" => CardModel.Shapes.Club,
-                "Diamonds" => CardModel.Shapes.Diamond,
-                "Hearts" => CardModel.Shapes.Heart,
-                "Spades" => CardModel.Shapes.Spade,
-                _ => CardModel.Shapes.Club
-            };
-
-            await game.AskForShape(CurrentPlayer, opponent.Id, value, shape);
+                await Toast.Make("לא ניתן לבצע את הבקשה כעת", ToastDuration.Short, 14).Show();
+            }
         }
 
         private void NextTurn(object obj)
@@ -108,6 +106,7 @@ namespace Quartets.ViewModels
             OnPropertyChanged(nameof(CurrentStatus));
             OnPropertyChanged(nameof(IsMyTurn));
             OnPropertyChanged(nameof(DeckCount));
+            OnPropertyChanged(nameof(CompletedSets));
 
             BuildPlayerVMs();
         }

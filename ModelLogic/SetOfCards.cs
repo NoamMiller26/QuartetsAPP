@@ -35,9 +35,14 @@ namespace Quartets.ModelLogic
         }
         public override Card GetRandomCard()
         {
-            Card card = null!;
-            while (card == null)
-                card = cards![rnd.Next(cards.Count)];
+            if (cards == null || !cards.Any())
+            {
+                return null!;
+            }
+
+            int idx = rnd.Next(cards.Count);
+            Card card = cards[idx];
+            cards.RemoveAt(idx);
             usedCards!.Add(card);
             return card;
 

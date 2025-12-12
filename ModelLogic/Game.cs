@@ -243,22 +243,136 @@ namespace Quartets.ModelLogic
                 .AddAsync(data);
         }
 
+        private DateTime ExtractTimestamp(object ts)
+        {
+            if (ts == null) return DateTime.MinValue;
+
+            // Plugin.CloudFirestore.Timestamp supports ToDateTime
+            if (ts.GetType().Name == "Timestamp")
+            {
+                try
+                {
+                    dynamic dyn = ts;
+                    return (DateTime)dyn.ToDateTime();
+                }
+                catch
+                {
+                    return DateTime.MinValue;
+                }
+            }
+
+            if (ts is DateTime dt)
+            {
+                return dt;
+            }
+
+            if (DateTime.TryParse(ts.ToString(), out DateTime parsed))
+            {
+                return parsed;
+            }
+
+            return DateTime.MinValue;
+        }
+
+        private void RemoveCardsFromPlayer(Player player, IEnumerable<Card> cards)
+        {
+            List<Card> list = cards.ToList();
+            if (!list.Any())
+            {
+                return;
+            }
+
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                foreach (Card card in list)
+                {
+                    player.Hand.Remove(card);
+                    player.HandObservable.Remove(card);
+                }
+
+                OnGameChanged?.Invoke(this, EventArgs.Empty);
+            });
+        }
+
+        private void AddCardsToPlayer(Player player, IEnumerable<Card> cards)
+        {
+            List<Card> list = cards.ToList();
+            if (!list.Any())
+            {
+                return;
+            }
+
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                foreach (Card card in list)
+                {
+                    player.Hand.Add(card);
+                    player.HandObservable.Add(card);
+                }
+
+                OnGameChanged?.Invoke(this, EventArgs.Empty);
+            });
+        }
+
+        private void CheckAndHandleCompletedSets(Player player, bool notify = true)
+        {
+            var quartets = player.HandObservable
+                .GroupBy(c => c.Value)
+                .Where(g => g.Count() == 4)
+                .ToList();
+
+            if (!quartets.Any())
+            {
+                return;
+            }
+
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                foreach (var quartet in quartets)
+                {
+                    foreach (Card card in quartet.ToList())
+                    {
+                        player.Hand.Remove(card);
+                        player.HandObservable.Remove(card);
+                    }
+                }
+
+                player.AddCompletedSets(quartets.Count);
+                OnGameChanged?.Invoke(this, EventArgs.Empty);
+
+                if (notify)
+                {
+                    MainThread.BeginInvokeOnMainThread(async () =>
+                        await Toast.Make($"השלמת {quartets.Count} רביעייה!", ToastDuration.Short, 14).Show());
+                }
+            });
+        }
+
         private async Task HandleIncorrectAsk(string playerIdWhoFailed)
         {
             Card newCard = GetCardFromDeck();
 
             if (newCard != null)
             {
-                await SendCardToPlayer(newCard, playerIdWhoFailed);
+                await SendCardsToPlayer(new List<Card> { newCard }, playerIdWhoFailed, "AskFail");
             }
 
             NextTurn();
             MainThread.BeginInvokeOnMainThread(() => OnGameChanged?.Invoke(this, EventArgs.Empty));
         }
 
-        public async Task AskForCard(Player asking, string targetId, int value)
+        public async Task<bool> AskForCard(Player asking, string targetId, int value)
         {
-            if (asking.Id != fbd.UserId || !asking.IsCurrentTurn) return;
+            if (asking.Id != fbd.UserId || !asking.IsCurrentTurn)
+            {
+                return false;
+            }
+
+            bool hasRankInHand = asking.HandObservable.Any(c => c.Value == value);
+            if (!hasRankInHand)
+            {
+                return false;
+            }
 
             Dictionary<string, object> request = new Dictionary<string, object>
             {
@@ -270,34 +384,35 @@ namespace Quartets.ModelLogic
             };
 
             await AddSubDocumentAsync(Keys.GamesCollection, Id, "Requests", request);
+            return true;
         }
 
-        public async Task AskForShape(Player asking, string targetId, int value, CardModel.Shapes shape)
+        private async Task SendCardsToPlayer(IEnumerable<Card> cards, string playerId, string reason = null)
         {
-            if (asking.Id != fbd.UserId || !asking.IsCurrentTurn) return;
+            List<Dictionary<string, object>> cardsPayload = cards
+                .Select(c => new Dictionary<string, object>
+                {
+                    { nameof(Card.Value), c.Value },
+                    { nameof(Card.Shape), c.Shape.ToString() }
+                })
+                .ToList();
 
-            Dictionary<string, object> request = new Dictionary<string, object>
+            if (!cardsPayload.Any())
             {
-                { "Type", "AskForShape" },
-                { "From", asking.Id },
-                { "To", targetId },
-                { "Value", value },
-                { "Shape", shape.ToString() },
-                { "TimeStamp", DateTime.UtcNow }
-            };
+                return;
+            }
 
-            await AddSubDocumentAsync(Keys.GamesCollection, Id, "Requests", request);
-        }
-
-        private async Task SendCardToPlayer(Card card, string playerId)
-        {
             Dictionary<string, object> payload = new Dictionary<string, object>
             {
                 { "Type", "CardTransfer" },
-                { "Card", new Dictionary<string, object> { { nameof(Card.Value), card.Value }, { nameof(Card.Shape), card.Shape.ToString() } } },
+                { "Cards", cardsPayload },
                 { "To", playerId },
                 { "TimeStamp", DateTime.UtcNow }
             };
+            if (!string.IsNullOrWhiteSpace(reason))
+            {
+                payload["Reason"] = reason;
+            }
 
             await AddSubDocumentAsync(Keys.GamesCollection, Id, "Requests", payload);
             await Task.Delay(100);
@@ -310,76 +425,148 @@ namespace Quartets.ModelLogic
                 return;
             }
 
-            List<IDocumentSnapshot> documentsToHandle = snapshot.Documents
-                .Where((IDocumentSnapshot d) =>
+            if (CurrentPlayer == null)
+            {
+                return;
+            }
+
+            // Process only newly added documents to avoid re-processing and duplicates
+            var changes = snapshot.DocumentChanges?
+                .Where(c => c.Type == DocumentChangeType.Added)
+                .Select(c => c.Document)
+                .ToList() ?? new List<IDocumentSnapshot>();
+
+            if (!changes.Any())
+            {
+                return;
+            }
+
+            // Materialize to plain objects so we never touch disposed snapshot objects after awaits
+            var documentsToHandle = changes
+                .Select(d =>
                 {
-                    if (d.ToObject<Dictionary<string, object>>().TryGetValue("To", out object toValue))
+                    var data = d.ToObject<Dictionary<string, object>>();
+                    if (data == null) return null;
+
+                    data.TryGetValue("To", out object toObj);
+                    data.TryGetValue("From", out object fromObj);
+                    data.TryGetValue("Type", out object typeObj);
+                    data.TryGetValue("Value", out object valueObj);
+                    data.TryGetValue("Card", out object cardObj);
+                    data.TryGetValue("Cards", out object cardsObj);
+                    data.TryGetValue("TimeStamp", out object tsObj);
+                    data.TryGetValue("Reason", out object reasonObj);
+
+                    return new
                     {
-                        return toValue.ToString() == fbd.UserId;
-                    }
-                    return false;
+                        DocId = d.Id,
+                        To = toObj?.ToString(),
+                        From = fromObj?.ToString(),
+                        Type = typeObj?.ToString(),
+                        ValueObj = valueObj,
+                        CardObj = cardObj,
+                        CardsObj = cardsObj,
+                        SortKey = ExtractTimestamp(tsObj),
+                        Reason = reasonObj?.ToString()
+                    };
                 })
-                .OrderBy((IDocumentSnapshot d) => d.ToObject<Dictionary<string, object>>().TryGetValue("TimeStamp", out object ts) ? ts : DateTime.MinValue)
+                .Where(x => x != null && x.To == fbd.UserId && !string.IsNullOrWhiteSpace(x.Type))
+                .OrderBy(x => x.SortKey)
                 .ToList();
 
-            foreach (IDocumentSnapshot document in documentsToHandle)
+            foreach (var entry in documentsToHandle)
             {
-                Dictionary<string, object> request = document.ToObject<Dictionary<string, object>>();
-                string type = request["Type"].ToString();
-                string fromId = request["From"].ToString();
+                IDocumentReference docRef = CrossCloudFirestore.Current.Instance
+                    .Collection(Keys.GamesCollection)
+                    .Document(Id)
+                    .Collection("Requests")
+                    .Document(entry.DocId);
 
-                if (type == "AskForValue" && request.ContainsKey("Value"))
+                try
                 {
-                    int value = int.Parse(request["Value"].ToString());
-                    // === תיקון 1: שימוש ב-HandObservable ===
-                    bool hasCard = CurrentPlayer.HandObservable.Any((Card c) => c.Value == value);
-
-                    if (!hasCard)
+                    if (entry.Type == "AskForValue" && entry.ValueObj != null && !string.IsNullOrWhiteSpace(entry.From))
                     {
-                        await HandleIncorrectAsk(fromId);
+                        int value = int.Parse(entry.ValueObj.ToString());
+                        var matchingCards = CurrentPlayer.HandObservable.Where(c => c.Value == value).ToList();
+
+                        if (matchingCards.Any())
+                        {
+                            RemoveCardsFromPlayer(CurrentPlayer, matchingCards);
+                            await SendCardsToPlayer(matchingCards, entry.From, "AskSuccess");
+                            CheckAndHandleCompletedSets(CurrentPlayer, notify: false);
+                        }
+                        else
+                        {
+                            await HandleIncorrectAsk(entry.From);
+                        }
+                    }
+                    else if (entry.Type == "CardTransfer" && entry.CardObj is Dictionary<string, object> singleCard)
+                    {
+                        if (singleCard.TryGetValue("Shape", out object shapeObj) &&
+                            singleCard.TryGetValue("Value", out object valObj))
+                        {
+                            CardModel.Shapes shape;
+                            if (Enum.TryParse<CardModel.Shapes>(shapeObj.ToString(), out shape))
+                            {
+                                int cardValue = int.Parse(valObj.ToString());
+                                AddCardsToPlayer(CurrentPlayer, new List<Card> { new Card(shape, cardValue) });
+                                CheckAndHandleCompletedSets(CurrentPlayer);
+                            }
+                        }
+                    }
+                    else if (entry.Type == "CardTransfer" && entry.CardsObj is IEnumerable<object> cardList)
+                    {
+                        var cardsToAdd = new List<Card>();
+                        foreach (object obj in cardList)
+                        {
+                            if (obj is Dictionary<string, object> dict &&
+                                dict.TryGetValue("Shape", out object shapeObj) &&
+                                dict.TryGetValue("Value", out object valObj))
+                            {
+                                CardModel.Shapes shape;
+                                if (Enum.TryParse<CardModel.Shapes>(shapeObj.ToString(), out shape))
+                                {
+                                    int cardValue = int.Parse(valObj.ToString());
+                                    cardsToAdd.Add(new Card(shape, cardValue));
+                                }
+                            }
+                        }
+
+                        AddCardsToPlayer(CurrentPlayer, cardsToAdd);
+                        CheckAndHandleCompletedSets(CurrentPlayer);
+
+                        // Notify receiver about result if present
+                        string reason = entry.Reason;
+                        if (!string.IsNullOrWhiteSpace(reason))
+                        {
+                            if (reason == "AskSuccess")
+                            {
+                                MainThread.BeginInvokeOnMainThread(async () =>
+                                    await Toast.Make("קיבלת את כל הקלפים שביקשת", ToastDuration.Short, 14).Show());
+                            }
+                            else if (reason == "AskFail")
+                            {
+                                MainThread.BeginInvokeOnMainThread(async () =>
+                                    await Toast.Make("לא היו קלפים, שלפת קלף מהקופה", ToastDuration.Short, 14).Show());
+                            }
+                        }
                     }
                 }
-
-                else if (type == "AskForShape" && request.ContainsKey("Shape") && request.ContainsKey("Value"))
+                catch (Exception)
                 {
-                    int value = int.Parse(request["Value"].ToString());
-                    CardModel.Shapes shape;
-                    Enum.TryParse<CardModel.Shapes>(request["Shape"].ToString(), out shape);
-
-                    // === תיקון 2: שימוש ב-HandObservable ===
-                    Card found = CurrentPlayer.HandObservable.FirstOrDefault((Card c) => c.Value == value && c.Shape == shape);
-
-                    if (found != null)
+                    // Ignore individual failures to keep processing other requests
+                }
+                finally
+                {
+                    try
                     {
-                        // === תיקון 3: שימוש ב-HandObservable ===
-                        MainThread.BeginInvokeOnMainThread(() => CurrentPlayer.HandObservable.Remove(found));
-                        await SendCardToPlayer(found, fromId);
-                        MainThread.BeginInvokeOnMainThread(() => OnGameChanged?.Invoke(this, EventArgs.Empty));
+                        await docRef.DeleteAsync();
                     }
-                    else
+                    catch
                     {
-                        await HandleIncorrectAsk(fromId);
+                        // best effort
                     }
                 }
-
-                else if (type == "CardTransfer" && request.ContainsKey("Card"))
-                {
-                    Dictionary<string, object> cardDict = (Dictionary<string, object>)request["Card"];
-                    CardModel.Shapes shape;
-                    Enum.TryParse<CardModel.Shapes>(cardDict["Shape"].ToString(), out shape);
-                    int cardValue = int.Parse(cardDict["Value"].ToString());
-
-                    Card receivedCard = new Card(shape, cardValue);
-
-                    MainThread.BeginInvokeOnMainThread(() =>
-                    {
-                        // === תיקון 4: שימוש ב-HandObservable ===
-                        CurrentPlayer.HandObservable.Add(receivedCard);
-                        OnGameChanged?.Invoke(this, EventArgs.Empty);
-                    });
-                }
-
-                await document.Reference.DeleteAsync();
             }
         }
 

@@ -9,6 +9,10 @@
         <VerticalStackLayout Spacing="8">
 
             <Label Text="{Binding Name}" FontAttributes="Bold" HorizontalOptions="Center" TextColor="#3C2E86"/>
+            <Label Text="{Binding CompletedSets, StringFormat='סטים: {0}'}"
+                   FontSize="12"
+                   HorizontalOptions="Center"
+                   TextColor="#6E6B7B"/>
 
             <!-- אם זה השחקן המקומי - מציגים את כל הקלפים -->
             <CollectionView ItemsSource="{Binding HandObservable}"
