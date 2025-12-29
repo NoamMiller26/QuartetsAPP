@@ -1,4 +1,6 @@
-﻿using Quartets.ModelLogic;
+﻿using Plugin.CloudFirestore;
+using Plugin.CloudFirestore.Attributes;
+using Quartets.ModelLogic;
 using System;
 using System.Collections.Generic;
 using System.Linq;

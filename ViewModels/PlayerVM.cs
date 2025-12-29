@@ -1,10 +1,7 @@
-﻿using System.Collections.ObjectModel;
-using System.Windows.Input;
+﻿using Quartets.ModelLogic;
 using Quartets.Models;
-using Quartets.ModelLogic;
-using System.Linq;
-using System;
-using Microsoft.Maui.Controls;
+using System.Collections.ObjectModel;
+using System.Windows.Input;
 
 namespace Quartets.ViewModels
 {
