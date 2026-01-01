@@ -4,7 +4,6 @@ using Quartets.ModelLogic;
 using Quartets.Models;
 using Quartets.ModelsLogic;
 using System.Collections.ObjectModel;
-using System.Windows.Input;
 using System.Threading.Tasks;
 using System;
 using System.Collections.Generic;
@@ -27,7 +26,6 @@ namespace Quartets.ViewModels
         // יריבים בלבד (בשביל התצוגה)
         public ObservableCollection<PlayerVM> Opponents => opponents;
 
-        public ICommand NextTurnCommand => new Command(NextTurn);
         public string CurrentStatus => game.CurrentStatus;
         public bool IsMyTurn => CurrentPlayer.IsCurrentTurn;
         public Player CurrentPlayer => game.CurrentPlayer;
@@ -91,13 +89,6 @@ namespace Quartets.ViewModels
             {
                 await Toast.Make("לא ניתן לבצע את הבקשה כעת", ToastDuration.Short, 14).Show();
             }
-        }
-
-        private void NextTurn(object obj)
-        {
-            game.NextTurn();
-            OnPropertyChanged(nameof(CurrentStatus));
-            OnPropertyChanged(nameof(IsMyTurn));
         }
 
         private void OnGameChanged(object sender, EventArgs e)

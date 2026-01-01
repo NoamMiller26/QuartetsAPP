@@ -192,7 +192,36 @@ namespace Quartets.ModelLogic
                 PlayersIds = updatedGame.PlayersIds;
                 SyncPlayersFromMetadata();
 
-                if (Players.Count == MaxNumOfPlayers && CurrentPlayerIndex != updatedGame.CurrentPlayerIndex)
+                bool wasFull = IsFull;
+                IsFull = updatedGame.IsFull;
+                CurrentNumOfPlayers = updatedGame.CurrentNumOfPlayers;
+
+                // If game just became full and we're the host, initialize the starting player to the last one
+                // Also handle case where game is already full but CurrentPlayerIndex hasn't been initialized
+                if (IsFull && IsHostUser && Players.Count == MaxNumOfPlayers)
+                {
+                    // Check if we need to initialize the starting player
+                    // If CurrentPlayerIndex is 0 and no player has their turn set, initialize it
+                    bool anyPlayerHasTurn = Players.Any(p => p.IsCurrentTurn);
+                    if ((!wasFull && IsFull) || (CurrentPlayerIndex == 0 && !anyPlayerHasTurn))
+                    {
+                        // Set starting player to the last player (index = CurrentNumOfPlayers - 1)
+                        int lastPlayerIndex = CurrentNumOfPlayers - 1;
+                        if (lastPlayerIndex >= 0 && lastPlayerIndex < Players.Count)
+                        {
+                            CurrentPlayerIndex = lastPlayerIndex;
+                            Players[CurrentPlayerIndex].IsCurrentTurn = true;
+
+                            // Update Firebase with the starting player
+                            Dictionary<string, object> dict = new Dictionary<string, object>
+                            {
+                                { nameof(CurrentPlayerIndex), CurrentPlayerIndex }
+                            };
+                            fbd.UpdateFields(Keys.GamesCollection, Id, dict, task => { });
+                        }
+                    }
+                }
+                else if (Players.Count == MaxNumOfPlayers && CurrentPlayerIndex != updatedGame.CurrentPlayerIndex)
                 {
                     int previous = CurrentPlayerIndex;
 
@@ -207,8 +236,6 @@ namespace Quartets.ModelLogic
                         Players[CurrentPlayerIndex].IsCurrentTurn = true;
                     }
                 }
-
-                IsFull = updatedGame.IsFull;
 
                 MainThread.BeginInvokeOnMainThread(() => OnGameChanged?.Invoke(this, EventArgs.Empty));
             }

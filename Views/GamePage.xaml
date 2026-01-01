@@ -57,7 +57,7 @@
                     </VerticalStackLayout>
                 </Frame>
 
-                <!-- Deck + Next Turn -->
+                <!-- Deck -->
                 <Frame BackgroundColor="White" CornerRadius="14" HasShadow="True" Padding="12">
                     <HorizontalStackLayout HorizontalOptions="Center" Spacing="16">
                         <Grid>
@@ -65,7 +65,6 @@
                             <Label Text="{Binding DeckCount}" HorizontalOptions="Center" VerticalOptions="Center" FontAttributes="Bold" TextColor="#3C2E86"/>
                         </Grid>
                         <Label Text="קופה" VerticalOptions="Center" TextColor="#3C2E86"/>
-                        <Button Text="Next Turn" Command="{Binding NextTurnCommand}" BackgroundColor="#5C4BDE" TextColor="White" CornerRadius="10" Padding="16,10"/>
                     </HorizontalStackLayout>
                 </Frame>
 
