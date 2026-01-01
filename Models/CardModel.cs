@@ -11,9 +11,13 @@ namespace Quartets.Models
 {
     public class CardModel : ImageButton
     {
+        public int Value { get; set; }
+        public enum Shapes { Club, Diamond, Heart, Spade };
+        public Shapes Shape { get; set; }
+
         public CardModel(Shapes shape, int value)
         {
-            Shape = shape;
+            Shape = (Shapes)shape;
             Value = value;
             if (value > 0)
                 Source = CardsImage[(int)shape, value - 1];
@@ -26,7 +30,7 @@ namespace Quartets.Models
         {"ace_diamond.png","two_diamond.png","three_diamond.png","four_diamond.png","five_diamond.png","six_diamond.png","seven_diamond.png","eight_diamond.png","nine_diamond.png","ten_diamond.png","jack_diamond.png","queen_diamond.png","king_diamond.png"  },
         {"ace_heart.png","two_heart.png","three_heart.png","four_heart.png","five_heart.png","six_heart.png","seven_heart.png","eight_heart.png","nine_heart.png","ten_heart.png","jack_heart.png","queen_heart.png","king_heart.png" },
         {"ace_spade.png","two_spade.png","three_spade.png","four_spade.png" ,"five_spade.png","six_spade.png","seven_spade.png","eight_spade.png","nine_spade.png" ,"ten_spade.png","jack_spade.png","queen_spade.png","king_spade.png"}};
-        public enum Shapes { Club, Diamond, Heart, Spade };
+      
         public static int CardsInShape
         {
             get
@@ -34,7 +38,6 @@ namespace Quartets.Models
                 return CardsImage.GetLength(1);
             }
         }
-        public Shapes Shape { get; set; }
-        public int Value { get; set; }
+       
     }
 }

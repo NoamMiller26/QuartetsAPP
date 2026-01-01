@@ -16,6 +16,7 @@ namespace Quartets.ModelLogic
     public class Game : GameModel
     {
         private IListenerRegistration requestsListener;
+        private bool isRestoringCards = false; // Flag to prevent syncing during restore
 
         public override string CurrentStatus
         {
@@ -97,7 +98,16 @@ namespace Quartets.ModelLogic
                 CurrentPlayer = new Player(MyName, fbd.UserId);
             }
 
-            EnsureDeckInitialized();
+            // Restore cards from Firebase if available, otherwise initialize
+            // Only restore if we have valid data and players are set up
+            if (Players.Any() && (PlayerHandsData != null || DeckData != null))
+            {
+                RestoreCardsFromFirebase();
+            }
+            else if (Players.Any())
+            {
+                EnsureDeckInitialized();
+            }
         }
 
         public override void Init()
@@ -107,6 +117,11 @@ namespace Quartets.ModelLogic
 
         public override void SetDocument(Action<Task> OnComplete)
         {
+            // Sync cards to Firebase before saving
+            if (Players != null && Players.Any())
+            {
+                SyncCardsToFirebase();
+            }
             Id = fbd.SetDocument(this, Keys.GamesCollection, Id, OnComplete);
         }
 
@@ -196,45 +211,67 @@ namespace Quartets.ModelLogic
                 IsFull = updatedGame.IsFull;
                 CurrentNumOfPlayers = updatedGame.CurrentNumOfPlayers;
 
-                // If game just became full and we're the host, initialize the starting player to the last one
-                // Also handle case where game is already full but CurrentPlayerIndex hasn't been initialized
-                if (IsFull && IsHostUser && Players.Count == MaxNumOfPlayers)
+                // Update CurrentPlayerIndex FIRST before restoring cards, so turn state is correct
+                if (Players.Count == MaxNumOfPlayers)
                 {
-                    // Check if we need to initialize the starting player
-                    // If CurrentPlayerIndex is 0 and no player has their turn set, initialize it
-                    bool anyPlayerHasTurn = Players.Any(p => p.IsCurrentTurn);
-                    if ((!wasFull && IsFull) || (CurrentPlayerIndex == 0 && !anyPlayerHasTurn))
+                    // If game just became full and we're the host, initialize the starting player to the last one
+                    if (IsFull && IsHostUser)
                     {
-                        // Set starting player to the last player (index = CurrentNumOfPlayers - 1)
-                        int lastPlayerIndex = CurrentNumOfPlayers - 1;
-                        if (lastPlayerIndex >= 0 && lastPlayerIndex < Players.Count)
+                        // Check if we need to initialize the starting player
+                        // If CurrentPlayerIndex is 0 and no player has their turn set, initialize it
+                        bool anyPlayerHasTurn = Players.Any(p => p.IsCurrentTurn);
+                        if ((!wasFull && IsFull) || (CurrentPlayerIndex == 0 && !anyPlayerHasTurn))
                         {
-                            CurrentPlayerIndex = lastPlayerIndex;
-                            Players[CurrentPlayerIndex].IsCurrentTurn = true;
-
-                            // Update Firebase with the starting player
-                            Dictionary<string, object> dict = new Dictionary<string, object>
+                            // Set starting player to the last player (index = CurrentNumOfPlayers - 1)
+                            int lastPlayerIndex = CurrentNumOfPlayers - 1;
+                            if (lastPlayerIndex >= 0 && lastPlayerIndex < Players.Count)
                             {
-                                { nameof(CurrentPlayerIndex), CurrentPlayerIndex }
-                            };
-                            fbd.UpdateFields(Keys.GamesCollection, Id, dict, task => { });
+                                CurrentPlayerIndex = lastPlayerIndex;
+                                
+                                // Clear all turn states first
+                                foreach (var p in Players)
+                                {
+                                    p.IsCurrentTurn = false;
+                                }
+                                
+                                Players[CurrentPlayerIndex].IsCurrentTurn = true;
+
+                                // Update Firebase with the starting player
+                                Dictionary<string, object> dict = new Dictionary<string, object>
+                                {
+                                    { nameof(CurrentPlayerIndex), CurrentPlayerIndex }
+                                };
+                                fbd.UpdateFields(Keys.GamesCollection, Id, dict, task => { });
+                            }
+                        }
+                    }
+                    
+                    // Always update turn state based on CurrentPlayerIndex from Firebase
+                    // This ensures consistency even if the index hasn't changed
+                    if (CurrentPlayerIndex != updatedGame.CurrentPlayerIndex || Players.Count(p => p.IsCurrentTurn) != 1)
+                    {
+                        int previous = CurrentPlayerIndex;
+                        CurrentPlayerIndex = updatedGame.CurrentPlayerIndex;
+
+                        // Clear all turn states first - ALWAYS do this to ensure only one player has turn
+                        foreach (var p in Players)
+                        {
+                            p.IsCurrentTurn = false;
+                        }
+
+                        if (CurrentPlayerIndex >= 0 && CurrentPlayerIndex < Players.Count)
+                        {
+                            Players[CurrentPlayerIndex].IsCurrentTurn = true;
                         }
                     }
                 }
-                else if (Players.Count == MaxNumOfPlayers && CurrentPlayerIndex != updatedGame.CurrentPlayerIndex)
+
+                // Restore cards from Firebase if available (after turn state is set)
+                if (updatedGame.PlayerHandsData != null || updatedGame.DeckData != null)
                 {
-                    int previous = CurrentPlayerIndex;
-
-                    CurrentPlayerIndex = updatedGame.CurrentPlayerIndex;
-
-                    if (previous >= 0 && previous < Players.Count)
-                    {
-                        Players[previous].IsCurrentTurn = false;
-                    }
-                    if (CurrentPlayerIndex >= 0 && CurrentPlayerIndex < Players.Count)
-                    {
-                        Players[CurrentPlayerIndex].IsCurrentTurn = true;
-                    }
+                    PlayerHandsData = updatedGame.PlayerHandsData;
+                    DeckData = updatedGame.DeckData;
+                    RestoreCardsFromFirebase();
                 }
 
                 MainThread.BeginInvokeOnMainThread(() => OnGameChanged?.Invoke(this, EventArgs.Empty));
@@ -256,6 +293,8 @@ namespace Quartets.ModelLogic
             {
                 Card card = Deck.First();
                 Deck.RemoveAt(0);
+                // Sync deck after removing card
+                SyncCardsToFirebase();
                 return card;
             }
             return null;
@@ -317,6 +356,7 @@ namespace Quartets.ModelLogic
                     player.HandObservable.Remove(card);
                 }
 
+                SyncCardsToFirebase();
                 OnGameChanged?.Invoke(this, EventArgs.Empty);
             });
         }
@@ -337,6 +377,7 @@ namespace Quartets.ModelLogic
                     player.HandObservable.Add(card);
                 }
 
+                SyncCardsToFirebase();
                 OnGameChanged?.Invoke(this, EventArgs.Empty);
             });
         }
@@ -365,12 +406,20 @@ namespace Quartets.ModelLogic
                 }
 
                 player.AddCompletedSets(quartets.Count);
+                SyncCardsToFirebase();
                 OnGameChanged?.Invoke(this, EventArgs.Empty);
 
                 if (notify)
                 {
                     MainThread.BeginInvokeOnMainThread(async () =>
                         await Toast.Make($"השלמת {quartets.Count} רביעייה!", ToastDuration.Short, 14).Show());
+                }
+
+                // Check if player has won (13 completed sets = all quartets)
+                if (player.CompletedSets >= 13)
+                {
+                    // Game ended - player won
+                    OnGameEnded?.Invoke(this, player.Name);
                 }
             });
         }
@@ -382,6 +431,7 @@ namespace Quartets.ModelLogic
             if (newCard != null)
             {
                 await SendCardsToPlayer(new List<Card> { newCard }, playerIdWhoFailed, "AskFail");
+                // Cards are synced by GetCardFromDeck and AddCardsToPlayer
             }
 
             NextTurn();
@@ -599,11 +649,32 @@ namespace Quartets.ModelLogic
 
         private void EnsureDeckInitialized()
         {
-            if (Deck.Any() || Players == null)
+            if (Deck.Any() || Players == null || !Players.Any())
             {
                 return;
             }
 
+            // If we have deck data from Firebase, restore from it (but don't sync back immediately)
+            if (DeckData != null && DeckData.Any())
+            {
+                foreach (var cardDict in DeckData)
+                {
+                    if (cardDict.TryGetValue("Shape", out object shapeObj) &&
+                        cardDict.TryGetValue("Value", out object valueObj))
+                    {
+                        if (Enum.TryParse<CardModel.Shapes>(shapeObj?.ToString(), out CardModel.Shapes shape))
+                        {
+                            if (int.TryParse(valueObj?.ToString(), out int value) && value >= 1 && value <= 13)
+                            {
+                                Deck.Add(new Card(shape, value));
+                            }
+                        }
+                    }
+                }
+                return;
+            }
+
+            // Otherwise, initialize deck from scratch
             List<Card> full = new List<Card>();
             foreach (CardModel.Shapes shape in Enum.GetValues(typeof(CardModel.Shapes)))
             {
@@ -613,14 +684,18 @@ namespace Quartets.ModelLogic
                 }
             }
 
+            // Remove cards that are in player hands
             foreach (Player player in Players)
             {
                 foreach (Card card in player.HandObservable.ToList())
                 {
-                    Card? match = full.FirstOrDefault(c => c.Shape == card.Shape && c.Value == card.Value);
-                    if (match != null)
+                    if (card != null && card.Value >= 1 && card.Value <= 13)
                     {
-                        full.Remove(match);
+                        Card? match = full.FirstOrDefault(c => c.Shape == card.Shape && c.Value == card.Value);
+                        if (match != null)
+                        {
+                            full.Remove(match);
+                        }
                     }
                 }
             }
@@ -628,6 +703,162 @@ namespace Quartets.ModelLogic
             foreach (Card card in full)
             {
                 Deck.Add(card);
+            }
+
+            // Only sync to Firebase if game ID is set (game is created)
+            if (!string.IsNullOrEmpty(Id))
+            {
+                SyncCardsToFirebase();
+            }
+        }
+
+        private void SyncCardsToFirebase()
+        {
+            // Don't sync if we're currently restoring cards (to avoid circular updates)
+            if (isRestoringCards)
+            {
+                return;
+            }
+
+            if (string.IsNullOrEmpty(Id) || Players == null || !Players.Any())
+            {
+                return;
+            }
+
+            // Only sync if game is initialized (has players with valid IDs)
+            if (Players.Any(p => string.IsNullOrEmpty(p.Id)))
+            {
+                return;
+            }
+
+            // Serialize player hands - validate cards first
+            List<Dictionary<string, object>> playerHandsData = new List<Dictionary<string, object>>();
+            foreach (Player player in Players)
+            {
+                if (string.IsNullOrEmpty(player.Id))
+                {
+                    continue;
+                }
+
+                // Validate and serialize cards
+                var validCards = player.HandObservable
+                    .Where(c => c != null && c.Value >= 1 && c.Value <= 13)
+                    .Select(c => new Dictionary<string, object>
+                    {
+                        { "Shape", c.Shape.ToString() },
+                        { "Value", c.Value }
+                    })
+                    .ToList();
+
+                Dictionary<string, object> playerData = new Dictionary<string, object>
+                {
+                    { "PlayerId", player.Id },
+                    { "Cards", validCards }
+                };
+                playerHandsData.Add(playerData);
+            }
+
+            // Serialize deck - validate cards first
+            List<Dictionary<string, object>> deckData = Deck
+                .Where(c => c != null && c.Value >= 1 && c.Value <= 13)
+                .Select(c => new Dictionary<string, object>
+                {
+                    { "Shape", c.Shape.ToString() },
+                    { "Value", c.Value }
+                })
+                .ToList();
+
+            // Update Firebase
+            Dictionary<string, object> dict = new Dictionary<string, object>
+            {
+                { nameof(PlayerHandsData), playerHandsData },
+                { nameof(DeckData), deckData }
+            };
+
+            fbd.UpdateFields(Keys.GamesCollection, Id, dict, task => { });
+        }
+
+        private void RestoreCardsFromFirebase()
+        {
+            if (PlayerHandsData == null || Players == null)
+            {
+                return;
+            }
+
+            isRestoringCards = true;
+            try
+            {
+                // Restore player hands - only restore if player exists and has valid ID
+                foreach (var playerData in PlayerHandsData)
+                {
+                    if (!playerData.TryGetValue("PlayerId", out object playerIdObj) ||
+                        !playerData.TryGetValue("Cards", out object cardsObj))
+                    {
+                        continue;
+                    }
+
+                    string playerId = playerIdObj?.ToString();
+                    if (string.IsNullOrEmpty(playerId))
+                    {
+                        continue;
+                    }
+
+                    Player player = Players.FirstOrDefault(p => p.Id == playerId);
+                    if (player == null)
+                    {
+                        continue;
+                    }
+
+                    // Clear existing hand
+                    player.Hand.Clear();
+                    player.HandObservable.Clear();
+
+                    // Restore cards with validation
+                    if (cardsObj is IEnumerable<object> cardsList)
+                    {
+                        foreach (object cardObj in cardsList)
+                        {
+                            if (cardObj is Dictionary<string, object> cardDict &&
+                                cardDict.TryGetValue("Shape", out object shapeObj) &&
+                                cardDict.TryGetValue("Value", out object valueObj))
+                            {
+                                if (Enum.TryParse<CardModel.Shapes>(shapeObj?.ToString(), out CardModel.Shapes shape))
+                                {
+                                    if (int.TryParse(valueObj?.ToString(), out int value) && value >= 1 && value <= 13)
+                                    {
+                                        Card card = new Card(shape, value);
+                                        player.Hand.Add(card);
+                                        player.HandObservable.Add(card);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+            // Restore deck with validation
+            if (DeckData != null)
+            {
+                Deck.Clear();
+                foreach (var cardDict in DeckData)
+                {
+                    if (cardDict.TryGetValue("Shape", out object shapeObj) &&
+                        cardDict.TryGetValue("Value", out object valueObj))
+                    {
+                        if (Enum.TryParse<CardModel.Shapes>(shapeObj?.ToString(), out CardModel.Shapes shape))
+                        {
+                            if (int.TryParse(valueObj?.ToString(), out int value) && value >= 1 && value <= 13)
+                            {
+                                Deck.Add(new Card(shape, value));
+                            }
+                        }
+                    }
+                }
+            }
+            }
+            finally
+            {
+                isRestoringCards = false;
             }
         }
 
@@ -653,6 +884,7 @@ namespace Quartets.ModelLogic
                 if (!exists)
                 {
                     Player newPlayer = new Player(name, id);
+                    newPlayer.IsCurrentTurn = false; // Ensure new players don't have turn
                     Players.Add(newPlayer);
 
                     if (id == fbd.UserId)

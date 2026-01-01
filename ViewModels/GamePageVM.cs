@@ -44,6 +44,7 @@ namespace Quartets.ViewModels
             BuildPlayerVMs();
 
             game.OnGameChanged += OnGameChanged;
+            game.OnGameEnded += OnGameEnded;
         }
 
         private void BuildPlayerVMs()
@@ -110,6 +111,14 @@ namespace Quartets.ViewModels
                     ToastDuration.Long, 14).Show();
             }
         }
+
+        private void OnGameEnded(object sender, string winnerName)
+        {
+            // Notify the page to show the appropriate popup
+            OnGameEndedEvent?.Invoke(winnerName);
+        }
+
+        public event Action<string>? OnGameEndedEvent;
 
         public void AddSnapshotListener()
         {

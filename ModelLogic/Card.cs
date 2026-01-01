@@ -1,11 +1,6 @@
 ﻿using Quartets.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static Quartets.Models.CardModel;
-
+using Plugin.CloudFirestore;
+using Plugin.CloudFirestore.Attributes;
 namespace Quartets.ModelLogic
 {
     public class Card : CardModel

@@ -5,10 +5,16 @@
                xmlns:m="clr-namespace:Quartets.Models"
                x:Class="Quartets.Views.WinningPopup"
                x:DataType="vm:WinningPopupVM">
-    <VerticalStackLayout Background="Aqua">
-        <Label Text="{Binding WinnerName}"
-    FontSize="16"
-  Margin="8,0"/>
+    <VerticalStackLayout Background="Aqua" Padding="20" Spacing="10">
+        <Label Text="You Won!"
+               FontSize="24"
+               FontAttributes="Bold"
+               HorizontalOptions="Center"
+               Margin="8,16"/>
+        <Label Text="{Binding WinnerName, StringFormat='Congratulations {0}!'}"
+               FontSize="18"
+               HorizontalOptions="Center"
+               Margin="8,0"/>
     </VerticalStackLayout>
 
 </toolkit:Popup>

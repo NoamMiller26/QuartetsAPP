@@ -24,6 +24,8 @@ namespace Quartets.Models
         [Ignored]
         public EventHandler? OnGameDeleted;
         [Ignored]
+        public EventHandler<string>? OnGameEnded; // Event raised when game ends, parameter is winner name
+        [Ignored]
         public Player CurrentPlayer { get; set; }
         [Ignored]
         public abstract string CurrentStatus { get; set; }
@@ -35,6 +37,13 @@ namespace Quartets.Models
         public int MaxNumOfPlayers { get; set; }
         public bool IsFull { get; set; }
         public int CurrentNumOfPlayers { get; set; } = 1;
+        
+        // Serializable card data for Firebase
+        // Format: List of dictionaries with "Shape" (string) and "Value" (int) for each player
+        public List<Dictionary<string, object>>? PlayerHandsData { get; set; }
+        // Format: List of dictionaries with "Shape" (string) and "Value" (int) for deck cards
+        public List<Dictionary<string, object>>? DeckData { get; set; }
+        
         [Ignored]
         public string Id { get; set; } = string.Empty;
         [Ignored]
