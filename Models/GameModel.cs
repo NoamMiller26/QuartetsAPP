@@ -56,9 +56,8 @@ namespace Quartets.Models
         public string NumOfPlayersName => $"{MaxNumOfPlayers}";
         [Ignored]
         public NumberOfPlayers? NumberOfPlayers { get; set; }
-        [Ignored]
-        public string TimeName => $"{Time} min";
-        public int Time { get; set; }
+
+               
        
         public abstract void SetDocument(Action<System.Threading.Tasks.Task> OnComplete);
         public abstract void AddSnapShotListener();

@@ -36,13 +36,7 @@ namespace Quartets.ModelLogic
 
         public Game() { }
 
-        public Game(GameTime selectedGameTime)
-        {
-            HostName = new User().UserName;
-            IsHostUser = true;
-            Time = selectedGameTime.Time;
-            Created = DateTime.Now;
-        }
+        
 
         public Game(NumberOfPlayers selectedNumberOfPlayers)
         {
@@ -266,12 +260,33 @@ namespace Quartets.ModelLogic
                     }
                 }
 
-                // Restore cards from Firebase if available (after turn state is set)
-                if (updatedGame.PlayerHandsData != null || updatedGame.DeckData != null)
+                // Restore cards from Firebase only if the card data actually changed
+                // This prevents overwriting local changes when we're the ones who synced
+                bool cardDataChanged = !AreCardDataEqual(PlayerHandsData, updatedGame.PlayerHandsData) ||
+                                      !AreDeckDataEqual(DeckData, updatedGame.DeckData);
+                
+                if (cardDataChanged && (updatedGame.PlayerHandsData != null || updatedGame.DeckData != null))
                 {
-                    PlayerHandsData = updatedGame.PlayerHandsData;
-                    DeckData = updatedGame.DeckData;
-                    RestoreCardsFromFirebase();
+                    // Only restore if we're not currently in the middle of restoring or syncing cards
+                    if (!isRestoringCards)
+                    {
+                        PlayerHandsData = updatedGame.PlayerHandsData;
+                        DeckData = updatedGame.DeckData;
+                        RestoreCardsFromFirebase();
+                        
+                        // After restoring, if we're the host, ensure all players have 4 cards
+                        // This handles the case where a new player joined but doesn't have cards in Firebase yet
+                        if (IsHostUser && Players.Any() && Deck.Any())
+                        {
+                            DealCardsToPlayersWithoutHands();
+                        }
+                    }
+                }
+                else if (updatedGame.PlayerHandsData == null && updatedGame.DeckData == null && IsHostUser && Players.Any())
+                {
+                    // If there are no cards in Firebase yet but we have players, initialize cards
+                    EnsureDeckInitialized();
+                    DealCardsToPlayersWithoutHands();
                 }
 
                 MainThread.BeginInvokeOnMainThread(() => OnGameChanged?.Invoke(this, EventArgs.Empty));
@@ -382,6 +397,23 @@ namespace Quartets.ModelLogic
             });
         }
 
+        private int GetRequiredQuartetsToWin()
+        {
+            // Win condition based on number of players:
+            // 2 players → 2 quartets
+            // 3 players → 3 quartets
+            // 4 players → 4 quartets
+            // 5 players → 4 quartets
+            return MaxNumOfPlayers switch
+            {
+                2 => 2,
+                3 => 3,
+                4 => 4,
+                5 => 4,
+                _ => 4 // Default to 4 for any other number of players
+            };
+        }
+
         private void CheckAndHandleCompletedSets(Player player, bool notify = true)
         {
             var quartets = player.HandObservable
@@ -415,8 +447,9 @@ namespace Quartets.ModelLogic
                         await Toast.Make($"השלמת {quartets.Count} רביעייה!", ToastDuration.Short, 14).Show());
                 }
 
-                // Check if player has won (13 completed sets = all quartets)
-                if (player.CompletedSets >= 13)
+                // Check if player has won based on number of players
+                int requiredQuartets = GetRequiredQuartetsToWin();
+                if (player.CompletedSets >= requiredQuartets)
                 {
                     // Game ended - player won
                     OnGameEnded?.Invoke(this, player.Name);
@@ -712,6 +745,75 @@ namespace Quartets.ModelLogic
             }
         }
 
+        private bool AreCardDataEqual(List<Dictionary<string, object>>? data1, List<Dictionary<string, object>>? data2)
+        {
+            if (data1 == null && data2 == null) return true;
+            if (data1 == null || data2 == null) return false;
+            if (data1.Count != data2.Count) return false;
+
+            // Serialize both to a comparable format
+            string serialized1 = SerializePlayerHands(data1);
+            string serialized2 = SerializePlayerHands(data2);
+
+            return serialized1 == serialized2;
+        }
+
+        private string SerializePlayerHands(List<Dictionary<string, object>> hands)
+        {
+            var sorted = new List<string>();
+            foreach (var h in hands)
+            {
+                if (!h.TryGetValue("PlayerId", out object playerIdObj) || !h.TryGetValue("Cards", out object cardsObj))
+                    continue;
+
+                string playerId = playerIdObj?.ToString() ?? "";
+                if (cardsObj is IEnumerable<object> cardList)
+                {
+                    var cardStrs = new List<string>();
+                    foreach (object cardObj in cardList)
+                    {
+                        if (cardObj is Dictionary<string, object> cardDict &&
+                            cardDict.TryGetValue("Shape", out object shapeObj) &&
+                            cardDict.TryGetValue("Value", out object valueObj))
+                        {
+                            cardStrs.Add($"{shapeObj?.ToString()}{valueObj?.ToString()}");
+                        }
+                    }
+                    cardStrs.Sort();
+                    sorted.Add($"{playerId}:{string.Join(",", cardStrs)}");
+                }
+            }
+            sorted.Sort();
+            return string.Join("|", sorted);
+        }
+
+        private bool AreDeckDataEqual(List<Dictionary<string, object>>? data1, List<Dictionary<string, object>>? data2)
+        {
+            if (data1 == null && data2 == null) return true;
+            if (data1 == null || data2 == null) return false;
+            if (data1.Count != data2.Count) return false;
+
+            // Serialize both decks to a comparable format
+            string serialized1 = SerializeDeck(data1);
+            string serialized2 = SerializeDeck(data2);
+
+            return serialized1 == serialized2;
+        }
+
+        private string SerializeDeck(List<Dictionary<string, object>> deck)
+        {
+            var cardStrs = new List<string>();
+            foreach (var d in deck)
+            {
+                if (d.TryGetValue("Shape", out object shapeObj) && d.TryGetValue("Value", out object valueObj))
+                {
+                    cardStrs.Add($"{shapeObj?.ToString()}{valueObj?.ToString()}");
+                }
+            }
+            cardStrs.Sort();
+            return string.Join(",", cardStrs);
+        }
+
         private void SyncCardsToFirebase()
         {
             // Don't sync if we're currently restoring cards (to avoid circular updates)
@@ -767,6 +869,11 @@ namespace Quartets.ModelLogic
                     { "Value", c.Value }
                 })
                 .ToList();
+
+            // Update local properties BEFORE syncing to Firebase
+            // This ensures that when OnChange fires, it will see the data is the same and won't restore
+            PlayerHandsData = playerHandsData;
+            DeckData = deckData;
 
             // Update Firebase
             Dictionary<string, object> dict = new Dictionary<string, object>
@@ -869,6 +976,8 @@ namespace Quartets.ModelLogic
                 return;
             }
 
+            bool newPlayerAdded = false;
+
             // Add any new players that are not yet in the Players collection
             for (int i = 0; i < PlayersNames.Length; i++)
             {
@@ -885,7 +994,17 @@ namespace Quartets.ModelLogic
                 {
                     Player newPlayer = new Player(name, id);
                     newPlayer.IsCurrentTurn = false; // Ensure new players don't have turn
+                    
+                    // If cards exist in Firebase, clear random cards - they'll be restored from Firebase
+                    // If no cards in Firebase yet, keep random cards for initial setup
+                    if (PlayerHandsData != null && PlayerHandsData.Any())
+                    {
+                        newPlayer.Hand.Clear();
+                        newPlayer.HandObservable.Clear();
+                    }
+                    
                     Players.Add(newPlayer);
+                    newPlayerAdded = true;
 
                     if (id == fbd.UserId)
                     {
@@ -909,6 +1028,44 @@ namespace Quartets.ModelLogic
                 {
                     OtherPlayers.Add(new PlayerVM(p, false, null));
                 }
+            }
+
+            // If a new player was added and we're the host, deal them cards from the deck if they don't have any
+            // This ensures every player starts with 4 cards
+            if (newPlayerAdded && IsHostUser && !string.IsNullOrEmpty(Id) && Deck.Any())
+            {
+                DealCardsToPlayersWithoutHands();
+            }
+        }
+
+        private void DealCardsToPlayersWithoutHands()
+        {
+            if (isRestoringCards) return; // Don't deal while restoring
+
+            const int initialHandSize = 4;
+            bool cardsWereDealt = false;
+
+            foreach (Player player in Players)
+            {
+                // If player has fewer than 4 cards, deal them cards from the deck
+                if (player.HandObservable.Count < initialHandSize)
+                {
+                    int cardsNeeded = initialHandSize - player.HandObservable.Count;
+                    
+                    for (int i = 0; i < cardsNeeded && Deck.Any(); i++)
+                    {
+                        Card card = Deck.First();
+                        Deck.RemoveAt(0);
+                        player.AddCard(card);
+                        cardsWereDealt = true;
+                    }
+                }
+            }
+
+            // Sync to Firebase after dealing cards
+            if (cardsWereDealt)
+            {
+                SyncCardsToFirebase();
             }
         }
 

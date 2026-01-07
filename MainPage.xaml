@@ -38,14 +38,6 @@
                 ItemDisplayBinding="{Binding DisplayName}"
                 ItemsSource="{Binding NumberOfPlayersList}"
                 SelectedItem="{Binding SelectedNumberOfPlayers}" />
-            <Picker
-                Title="{x:Static m:Strings.SelectGameTime}"
-                FontSize="20"
-                HorizontalTextAlignment="Center"
-                ItemDisplayBinding="{Binding DisplayName}"
-                ItemsSource="{Binding GameTimes}"
-                SelectedItem="{Binding SelectedGameTime}" />
-
             <ListView ItemsSource="{Binding GamesList}" SelectedItem="{Binding SelectedItem}">
                 <ListView.ItemTemplate>
                     <DataTemplate x:DataType="m:GameModel">

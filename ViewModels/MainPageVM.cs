@@ -14,8 +14,6 @@ namespace Quartets.ViewModels
         private readonly Games games = new();
         private readonly User user = new();
         private readonly MainPageML mainPageML = new();
-        public ObservableCollection<GameTime>? GameTimes { get => games.GameTimes; set => games.GameTimes = value; }
-        public GameTime SelectedGameTime { get => games.SelectedGameTime; set => games.SelectedGameTime = value; }
         public ObservableCollection<NumberOfPlayers>? NumberOfPlayersList { get => games.NumberOfPlayersList; set => games.NumberOfPlayersList = value; }
         public NumberOfPlayers SelectedNumberOfPlayers { get => games.SelectedNumberOfPlayers; set => games.SelectedNumberOfPlayers = value; }
         public ICommand InstructionsCommand { get; private set; }
