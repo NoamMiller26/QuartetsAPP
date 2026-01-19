@@ -12,6 +12,7 @@ namespace Quartets
             InitializeComponent();
             User user = new();
             MainPage = user.IsRegistered ? new LoginPage() : new RegisterPage();
+            Routing.RegisterRoute("HomePage", typeof(HomePage));
         }
     }
 }

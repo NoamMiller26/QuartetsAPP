@@ -44,7 +44,7 @@
                     <CollectionView.ItemTemplate>
                         <DataTemplate>
                             <Frame Padding="4" Margin="2" BackgroundColor="#D5CCFF" CornerRadius="6" HasShadow="False">
-                                <Image Source="card_back.png" WidthRequest="42" HeightRequest="64" Aspect="AspectFit"/>
+                                <Image Source="main_card.png" WidthRequest="42" HeightRequest="64" Aspect="AspectFit"/>
                             </Frame>
                         </DataTemplate>
                     </CollectionView.ItemTemplate>

@@ -116,6 +116,9 @@ namespace Quartets.ViewModels
         {
             // Notify the page to show the appropriate popup
             OnGameEndedEvent?.Invoke(winnerName);
+          
+
+           
         }
 
         public event Action<string>? OnGameEndedEvent;
