@@ -1,4 +1,4 @@
-﻿
+﻿using System;
 using Firebase.Auth;
 using Firebase.Auth.Providers;
 using Plugin.CloudFirestore;
@@ -45,8 +45,23 @@ namespace Quartets.ModelLogic
         }
         public override async void DeleteDocument(string collectonName, string id, Action<Task> OnComplete)
         {
-            IDocumentReference dr = fs.Collection(collectonName).Document(id);
-            await dr.DeleteAsync().ContinueWith(OnComplete);
+            try
+            {
+                if (string.IsNullOrEmpty(id) || string.IsNullOrEmpty(collectonName))
+                {
+                    OnComplete?.Invoke(Task.CompletedTask);
+                    return;
+                }
+                
+                IDocumentReference dr = fs.Collection(collectonName).Document(id);
+                await dr.DeleteAsync().ContinueWith(OnComplete);
+            }
+            catch (Exception ex)
+            {
+                // If deletion fails, still call OnComplete to avoid hanging
+                System.Diagnostics.Debug.WriteLine($"Error deleting document: {ex.Message}");
+                OnComplete?.Invoke(Task.FromException(ex));
+            }
         }
         public override string DisplayName
         {

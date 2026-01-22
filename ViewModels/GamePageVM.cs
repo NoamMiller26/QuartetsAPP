@@ -45,6 +45,7 @@ namespace Quartets.ViewModels
 
             game.OnGameChanged += OnGameChanged;
             game.OnGameEnded += OnGameEnded;
+            game.OnQuartetCompleted += OnQuartetCompleted;
         }
 
         private void BuildPlayerVMs()
@@ -122,6 +123,13 @@ namespace Quartets.ViewModels
         }
 
         public event Action<string>? OnGameEndedEvent;
+        public event Action<string, string>? OnQuartetCompletedEvent; // Parameters: playerName, playerId
+
+        private void OnQuartetCompleted(object sender, (string playerName, string playerId) e)
+        {
+            // Notify the page to show the popup
+            OnQuartetCompletedEvent?.Invoke(e.playerName, e.playerId);
+        }
 
         public void AddSnapshotListener()
         {

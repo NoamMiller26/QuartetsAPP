@@ -19,6 +19,8 @@ namespace Quartets.Views
             
             // Subscribe to game end event to show popups
             gpVM.OnGameEndedEvent += ShowGameEndPopup;
+            // Subscribe to quartet completion event to show popup
+            gpVM.OnQuartetCompletedEvent += ShowQuartetCompletedPopup;
         }
         
         private async void ShowGameEndPopup(string winnerName)
@@ -36,6 +38,37 @@ namespace Quartets.Views
                 var losingPopup = new LosingPopup(winnerName);
                 await this.ShowPopupAsync(losingPopup);
             }
+            
+            // Navigate back to homepage after showing popup
+            await Task.Delay(2000); // Wait 2 seconds for user to see the popup
+            
+            try
+            {
+                // Clean up before navigating
+                gpVM.OnGameEndedEvent -= ShowGameEndPopup;
+                gpVM.OnQuartetCompletedEvent -= ShowQuartetCompletedPopup;
+                gpVM.RemoveSnapshotListener();
+                
+                // Navigate back to homepage
+                if (Shell.Current != null && Shell.Current.Navigation != null)
+                {
+                    await Shell.Current.Navigation.PopToRootAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log error but don't crash - navigation might have already happened
+                System.Diagnostics.Debug.WriteLine($"Error during game cleanup: {ex.Message}");
+            }
+        }
+
+        private async void ShowQuartetCompletedPopup(string playerName, string playerId)
+        {
+            // Check if the current player completed the quartet
+            bool isCurrentPlayer = game.CurrentPlayer != null && game.CurrentPlayer.Id == playerId;
+            
+            var completedSetPopup = new CompletedSetPopUp(playerName, isCurrentPlayer);
+            await this.ShowPopupAsync(completedSetPopup);
         }
         
         protected override void OnAppearing()
@@ -48,6 +81,7 @@ namespace Quartets.Views
         protected override void OnDisappearing()
         {
             gpVM.OnGameEndedEvent -= ShowGameEndPopup;
+            gpVM.OnQuartetCompletedEvent -= ShowQuartetCompletedPopup;
             gpVM.RemoveSnapshotListener();
             base.OnDisappearing();
         }

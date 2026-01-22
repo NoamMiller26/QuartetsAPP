@@ -26,6 +26,8 @@ namespace Quartets.Models
         [Ignored]
         public EventHandler<string>? OnGameEnded; // Event raised when game ends, parameter is winner name
         [Ignored]
+        public EventHandler<(string playerName, string playerId)>? OnQuartetCompleted; // Event raised when a player completes a quartet, parameters are player name and player id
+        [Ignored]
         public Player CurrentPlayer { get; set; }
         [Ignored]
         public abstract string CurrentStatus { get; set; }

@@ -17,6 +17,7 @@ namespace Quartets.ModelLogic
     {
         private IListenerRegistration requestsListener;
         private bool isRestoringCards = false; // Flag to prevent syncing during restore
+        private Dictionary<string, int> previousCompletedSets = new Dictionary<string, int>(); // Track previous CompletedSets to detect changes
 
         public override string CurrentStatus
         {
@@ -136,16 +137,21 @@ namespace Quartets.ModelLogic
 
         public override void RemoveSnapShotListener()
         {
-            ilr.Remove();
+            ilr?.Remove();
             requestsListener?.Remove();
-            DeleteDocument(OnComplete);
+            
+            // Only delete document if we have a valid ID
+            if (!string.IsNullOrEmpty(Id))
+            {
+                DeleteDocument(OnComplete);
+            }
         }
 
         private void OnComplete(Task task)
         {
             if (task.IsCompletedSuccessfully)
             {
-                OnGameDeleted.Invoke(this, EventArgs.Empty);
+                OnGameDeleted?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -187,6 +193,12 @@ namespace Quartets.ModelLogic
 
         public override void DeleteDocument(Action<Task> OnComplete)
         {
+            // Only delete if we have a valid ID
+            if (string.IsNullOrEmpty(Id))
+            {
+                OnComplete?.Invoke(Task.CompletedTask);
+                return;
+            }
             fbd.DeleteDocument(Keys.GamesCollection, Id, OnComplete);
         }
 
@@ -256,6 +268,48 @@ namespace Quartets.ModelLogic
                         if (CurrentPlayerIndex >= 0 && CurrentPlayerIndex < Players.Count)
                         {
                             Players[CurrentPlayerIndex].IsCurrentTurn = true;
+                        }
+                    }
+                }
+
+                // Check for CompletedSets changes BEFORE restoring (to detect other players' quartet completions)
+                // This must happen before RestoreCardsFromFirebase() updates the tracking dictionary
+                if (updatedGame.PlayerHandsData != null)
+                {
+                    foreach (var playerData in updatedGame.PlayerHandsData)
+                    {
+                        if (playerData.TryGetValue("PlayerId", out object playerIdObj) &&
+                            playerData.TryGetValue("CompletedSets", out object completedSetsObj))
+                        {
+                            string playerId = playerIdObj?.ToString();
+                            if (!string.IsNullOrEmpty(playerId) && int.TryParse(completedSetsObj?.ToString(), out int newCompletedSets))
+                            {
+                                // Only check for changes if we've previously tracked this player
+                                // (to avoid false positives when first seeing a player's data)
+                                if (previousCompletedSets.TryGetValue(playerId, out int previousCompletedSetsValue))
+                                {
+                                    // Check if this player's CompletedSets increased
+                                    if (newCompletedSets > previousCompletedSetsValue)
+                                    {
+                                        // A player completed a quartet - find the player and raise event
+                                        Player player = Players.FirstOrDefault(p => p.Id == playerId);
+                                        if (player != null)
+                                        {
+                                            // Only raise event if this is NOT the current player's own completion
+                                            // (current player already got the event from CheckAndHandleCompletedSets)
+                                            bool isCurrentPlayer = player.Id == fbd.UserId;
+                                            
+                                            if (!isCurrentPlayer)
+                                            {
+                                                MainThread.BeginInvokeOnMainThread(() =>
+                                                    OnQuartetCompleted?.Invoke(this, (player.Name, player.Id)));
+                                            }
+                                        }
+                                    }
+                                }
+                                // Update tracking AFTER checking for changes (will be updated again in RestoreCardsFromFirebase, but that's ok)
+                                previousCompletedSets[playerId] = newCompletedSets;
+                            }
                         }
                     }
                 }
@@ -438,6 +492,13 @@ namespace Quartets.ModelLogic
                 }
 
                 player.AddCompletedSets(quartets.Count);
+                
+                // Update tracking dictionary BEFORE syncing to prevent duplicate events
+                previousCompletedSets[player.Id] = player.CompletedSets;
+                
+                // Raise event for quartet completion (current player sees this immediately)
+                OnQuartetCompleted?.Invoke(this, (player.Name, player.Id));
+                
                 SyncCardsToFirebase();
                 OnGameChanged?.Invoke(this, EventArgs.Empty);
 
@@ -855,7 +916,8 @@ namespace Quartets.ModelLogic
                 Dictionary<string, object> playerData = new Dictionary<string, object>
                 {
                     { "PlayerId", player.Id },
-                    { "Cards", validCards }
+                    { "Cards", validCards },
+                    { "CompletedSets", player.CompletedSets }
                 };
                 playerHandsData.Add(playerData);
             }
@@ -919,6 +981,30 @@ namespace Quartets.ModelLogic
                     // Clear existing hand
                     player.Hand.Clear();
                     player.HandObservable.Clear();
+
+                    // Restore CompletedSets if present
+                    if (playerData.TryGetValue("CompletedSets", out object completedSetsObj))
+                    {
+                        if (int.TryParse(completedSetsObj?.ToString(), out int completedSets))
+                        {
+                            // Only update if it's higher (to avoid resetting on restore)
+                            if (completedSets > player.CompletedSets)
+                            {
+                                int difference = completedSets - player.CompletedSets;
+                                player.AddCompletedSets(difference);
+                            }
+                            // Always update tracking for change detection (even if values are equal)
+                            previousCompletedSets[playerId] = completedSets;
+                        }
+                    }
+                    else
+                    {
+                        // If CompletedSets is not in Firebase data, track current value
+                        if (!previousCompletedSets.ContainsKey(playerId))
+                        {
+                            previousCompletedSets[playerId] = player.CompletedSets;
+                        }
+                    }
 
                     // Restore cards with validation
                     if (cardsObj is IEnumerable<object> cardsList)
@@ -1005,6 +1091,12 @@ namespace Quartets.ModelLogic
                     
                     Players.Add(newPlayer);
                     newPlayerAdded = true;
+                    
+                    // Initialize tracking for this player
+                    if (!previousCompletedSets.ContainsKey(id))
+                    {
+                        previousCompletedSets[id] = newPlayer.CompletedSets;
+                    }
 
                     if (id == fbd.UserId)
                     {
@@ -1027,6 +1119,12 @@ namespace Quartets.ModelLogic
                 if (p.Id != CurrentPlayer?.Id && !OtherPlayers.Any(op => op.Id == p.Id))
                 {
                     OtherPlayers.Add(new PlayerVM(p, false, null));
+                }
+                
+                // Ensure all existing players are tracked
+                if (!previousCompletedSets.ContainsKey(p.Id))
+                {
+                    previousCompletedSets[p.Id] = p.CompletedSets;
                 }
             }
 
