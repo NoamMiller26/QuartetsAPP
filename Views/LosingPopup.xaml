@@ -5,14 +5,14 @@
                xmlns:m="clr-namespace:Quartets.Models"
                x:Class="Quartets.Views.LosingPopup"
                x:DataType="vm:LosingPopupVM">
-    <VerticalStackLayout Background="Aqua">
+    <VerticalStackLayout Background="Red" Padding="20" Spacing="10">
         <Label Text="You Lost!"
-               FontSize="20"
+               FontSize="24"
                FontAttributes="Bold"
                HorizontalOptions="Center"
                Margin="8,16"/>
         <Label Text="{Binding WinnerName, StringFormat='Winner: {0}'}"
-               FontSize="16"
+               FontSize="18"
                HorizontalOptions="Center"
                Margin="8,0"/>
     </VerticalStackLayout>

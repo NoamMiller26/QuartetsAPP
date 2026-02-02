@@ -18,6 +18,7 @@ namespace Quartets.ModelLogic
         private IListenerRegistration requestsListener;
         private bool isRestoringCards = false; // Flag to prevent syncing during restore
         private Dictionary<string, int> previousCompletedSets = new Dictionary<string, int>(); // Track previous CompletedSets to detect changes
+        private string? gameEndedWinnerName; // Prevent duplicate game-ended notifications across snapshots/threads
 
         public override string CurrentStatus
         {
@@ -304,6 +305,13 @@ namespace Quartets.ModelLogic
                                                 MainThread.BeginInvokeOnMainThread(() =>
                                                     OnQuartetCompleted?.Invoke(this, (player.Name, player.Id)));
                                             }
+
+                                            // Also check if this completion ends the game (all clients should get the popup)
+                                            int requiredQuartets = GetRequiredQuartetsToWin();
+                                            if (newCompletedSets >= requiredQuartets)
+                                            {
+                                                NotifyGameEndedOnce(player.Name);
+                                            }
                                         }
                                     }
                                 }
@@ -327,6 +335,9 @@ namespace Quartets.ModelLogic
                         PlayerHandsData = updatedGame.PlayerHandsData;
                         DeckData = updatedGame.DeckData;
                         RestoreCardsFromFirebase();
+
+                        // In case we joined mid-game or missed the increment event, ensure we still detect game end.
+                        CheckForGameEndFromLocalState();
                         
                         // After restoring, if we're the host, ensure all players have 4 cards
                         // This handles the case where a new player joined but doesn't have cards in Firebase yet
@@ -353,6 +364,35 @@ namespace Quartets.ModelLogic
                     Toast.Make(Strings.GameDeleted, ToastDuration.Long).Show();
                 });
             }
+        }
+
+        private void CheckForGameEndFromLocalState()
+        {
+            // When state is restored from Firebase, local players' CompletedSets are updated here.
+            // If someone has already won, every client should raise the game-ended event exactly once.
+            int requiredQuartets = GetRequiredQuartetsToWin();
+            Player? winner = Players.FirstOrDefault(p => p.CompletedSets >= requiredQuartets);
+            if (winner != null)
+            {
+                NotifyGameEndedOnce(winner.Name);
+            }
+        }
+
+        private void NotifyGameEndedOnce(string winnerName)
+        {
+            if (string.IsNullOrWhiteSpace(winnerName))
+            {
+                return;
+            }
+
+            // Winner name is stable and sufficient as a de-dupe key for this game session.
+            if (string.Equals(gameEndedWinnerName, winnerName, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            gameEndedWinnerName = winnerName;
+            MainThread.BeginInvokeOnMainThread(() => OnGameEnded?.Invoke(this, winnerName));
         }
 
         private Card GetCardFromDeck()
@@ -513,7 +553,7 @@ namespace Quartets.ModelLogic
                 if (player.CompletedSets >= requiredQuartets)
                 {
                     // Game ended - player won
-                    OnGameEnded?.Invoke(this, player.Name);
+                    NotifyGameEndedOnce(player.Name);
                 }
             });
         }
