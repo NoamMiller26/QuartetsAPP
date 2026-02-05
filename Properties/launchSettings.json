@@ -2,7 +2,11 @@
   "profiles": {
     "Windows Machine": {
       "commandName": "MsixPackage",
-      "nativeDebugging": false
+      "nativeDebugging": false,
+      "environmentVariables": {
+        "GITHUB_CLIENT_ID": "Ov23liy5Rm1Yo5N80ZTt",
+        "GITHUB_CLIENT_SECRET": "0a4fcc8b57f688d241c13c0ab5d7bb63d40b0fc1"
+      }
     }
   }
 }
