@@ -17,8 +17,8 @@ namespace Quartets.ModelLogic
 
         public static async Task<GitHubUser?> LoginAsync()
         {
-            var clientId = Environment.GetEnvironmentVariable("GITHUB_CLIENT_ID");
-            var clientSecret = Environment.GetEnvironmentVariable("GITHUB_CLIENT_SECRET");
+            var clientId = "Ov23liy5Rm1Yo5N80ZTt";
+            var clientSecret = "0a4fcc8b57f688d241c13c0ab5d7bb63d40b0fc1";
 
             if (string.IsNullOrWhiteSpace(clientId) || string.IsNullOrWhiteSpace(clientSecret))
             {
