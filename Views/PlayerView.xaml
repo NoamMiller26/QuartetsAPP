@@ -28,19 +28,20 @@
                 </CollectionView.ItemTemplate>
             </CollectionView>
 
-            <!-- אם לא שחקן מקומי - מציגים גב קלפים ושורה של מספר הקלפים -->
-            <Grid IsVisible="{Binding IsLocalPlayer, Converter={StaticResource InverseBoolConverter}}">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
+            <!-- אם לא שחקן מקומי - מציגים מספר קלפים מעל שורת גב קלפים -->
+            <Grid IsVisible="{Binding IsLocalPlayer, Converter={StaticResource InverseBoolConverter}}"
+                  RowDefinitions="Auto,Auto">
+                <Label Text="{Binding HandObservable.Count, StringFormat='Cards: {0}'}"
+                       Grid.Row="0"
+                       HorizontalOptions="End"
+                       TextColor="#3C2E86"/>
 
                 <!-- תצוגת גב קלף חוזרת לפי מספר הקלפים -->
                 <CollectionView x:Name="BacksList"
+                                Grid.Row="1"
                                 ItemsSource="{Binding PlaceHolderBacks}"
                                 ItemsLayout="HorizontalList"
-                                HeightRequest="80"
-                                Grid.Column="0">
+                                HeightRequest="80">
                     <CollectionView.ItemTemplate>
                         <DataTemplate>
                             <Frame Padding="4" Margin="2" BackgroundColor="#D5CCFF" CornerRadius="6" HasShadow="False">
@@ -49,11 +50,6 @@
                         </DataTemplate>
                     </CollectionView.ItemTemplate>
                 </CollectionView>
-
-                <Label Text="{Binding HandObservable.Count, StringFormat='Cards: {0}'}" 
-                       Grid.Column="1" 
-                       VerticalOptions="Center"
-                       TextColor="#3C2E86"/>
             </Grid>
 
             <!-- כפתור לשאול את השחקן (מוצג רק עבור שחקנים אחרים) -->

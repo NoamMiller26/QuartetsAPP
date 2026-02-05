@@ -10,6 +10,7 @@ namespace Quartets.ViewModels
         public ICommand ToggleIsPasswordCommand { get; }
         public bool IsPassword { get; set; } = true;
         public ICommand LoginCommand { get; }
+        public ICommand LoginWithGitHubCommand { get; }
         private readonly User user = new();
         public bool CanLogin()
         {
@@ -19,6 +20,7 @@ namespace Quartets.ViewModels
         public LoginPageVM()
         {
             LoginCommand = new Command(Login, CanLogin);
+            LoginWithGitHubCommand = new Command(async () => await LoginWithGitHubAsync());
             ToggleIsPasswordCommand = new Command(ToggleIsPassword);
             user.OnAuthCompleted += OnAuthComplete;
         }
@@ -35,6 +37,27 @@ namespace Quartets.ViewModels
         private void Login()
         {
             user.Login();
+        }
+
+        private async Task LoginWithGitHubAsync()
+        {
+            var ghUser = await GitHubAuthService.LoginAsync();
+            if (ghUser == null)
+            {
+                return;
+            }
+
+            // Store minimal info locally so the rest of the app can use it (e.g., for display name).
+            Preferences.Set(Keys.UserNameKey, ghUser.UserName);
+            Preferences.Set(Keys.GitHubUserIdKey, ghUser.Id);
+
+            await MainThread.InvokeOnMainThreadAsync(() =>
+            {
+                if (Application.Current != null)
+                {
+                    Application.Current.MainPage = new HomePage();
+                }
+            });
         }
         private void ToggleIsPassword()
         {

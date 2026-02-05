@@ -19,6 +19,7 @@ namespace Quartets.Views
             
             // Subscribe to game end event to show popups
             gpVM.OnGameEndedEvent += ShowGameEndPopup;
+            gpVM.OnGameDrawnEvent += ShowDrawPopup;
             // Subscribe to quartet completion event to show popup
             gpVM.OnQuartetCompletedEvent += ShowQuartetCompletedPopup;
         }
@@ -46,6 +47,7 @@ namespace Quartets.Views
             {
                 // Clean up before navigating
                 gpVM.OnGameEndedEvent -= ShowGameEndPopup;
+                gpVM.OnGameDrawnEvent -= ShowDrawPopup;
                 gpVM.OnQuartetCompletedEvent -= ShowQuartetCompletedPopup;
                 gpVM.RemoveSnapshotListener();
                 
@@ -58,6 +60,31 @@ namespace Quartets.Views
             catch (Exception ex)
             {
                 // Log error but don't crash - navigation might have already happened
+                System.Diagnostics.Debug.WriteLine($"Error during game cleanup: {ex.Message}");
+            }
+        }
+
+        private async void ShowDrawPopup()
+        {
+            var drawPopup = new DrawPopup();
+            await this.ShowPopupAsync(drawPopup);
+
+            await Task.Delay(2000);
+
+            try
+            {
+                gpVM.OnGameEndedEvent -= ShowGameEndPopup;
+                gpVM.OnGameDrawnEvent -= ShowDrawPopup;
+                gpVM.OnQuartetCompletedEvent -= ShowQuartetCompletedPopup;
+                gpVM.RemoveSnapshotListener();
+
+                if (Shell.Current != null && Shell.Current.Navigation != null)
+                {
+                    await Shell.Current.Navigation.PopToRootAsync();
+                }
+            }
+            catch (Exception ex)
+            {
                 System.Diagnostics.Debug.WriteLine($"Error during game cleanup: {ex.Message}");
             }
         }
@@ -81,6 +108,7 @@ namespace Quartets.Views
         protected override void OnDisappearing()
         {
             gpVM.OnGameEndedEvent -= ShowGameEndPopup;
+            gpVM.OnGameDrawnEvent -= ShowDrawPopup;
             gpVM.OnQuartetCompletedEvent -= ShowQuartetCompletedPopup;
             gpVM.RemoveSnapshotListener();
             base.OnDisappearing();

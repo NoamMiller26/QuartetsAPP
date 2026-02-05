@@ -88,5 +88,16 @@
                 </FontImageSource>
             </Button.ImageSource>
         </Button>
+
+        <!-- Simple GitHub OAuth login button -->
+        <Button
+            Margin="0,10,0,0"
+            Command="{Binding LoginWithGitHubCommand}"
+            Text="Login with GitHub"
+            CornerRadius="20"
+            FontSize="18"
+            HeightRequest="50"
+            BackgroundColor="Black"
+            TextColor="White" />
     </VerticalStackLayout>
 </ContentPage>

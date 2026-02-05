@@ -26,6 +26,8 @@ namespace Quartets.Models
         [Ignored]
         public EventHandler<string>? OnGameEnded; // Event raised when game ends, parameter is winner name
         [Ignored]
+        public EventHandler? OnGameDrawn; // Event raised when game ends in a draw
+        [Ignored]
         public EventHandler<(string playerName, string playerId)>? OnQuartetCompleted; // Event raised when a player completes a quartet, parameters are player name and player id
         [Ignored]
         public Player CurrentPlayer { get; set; }
@@ -39,6 +41,16 @@ namespace Quartets.Models
         public int MaxNumOfPlayers { get; set; }
         public bool IsFull { get; set; }
         public int CurrentNumOfPlayers { get; set; } = 1;
+
+        // Turn timer (Firestore-backed so all clients show the same countdown)
+        // Stored as Unix time milliseconds (UTC) for easy cross-platform calculation.
+        public long TurnStartUnixMs { get; set; } = 0;
+        public int TurnDurationSeconds { get; set; } = 60;
+
+        // Game end state (Firestore-backed so all clients show the same popup/navigation)
+        // Values: "None" | "Win" | "Draw"
+        public string GameEndState { get; set; } = "None";
+        public string GameEndWinnerName { get; set; } = string.Empty;
         
         // Serializable card data for Firebase
         // Format: List of dictionaries with "Shape" (string) and "Value" (int) for each player

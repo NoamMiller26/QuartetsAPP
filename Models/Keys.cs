@@ -8,6 +8,7 @@ namespace Quartets.Models
         public const string PasswordKey = "Password";
         public const string EmailKey = "Email";
         public const string AgeKey = "Age";
+        public const string GitHubUserIdKey = "GitHubUserId";
         public const string FbAPIKey = "AIzaSyCrkTujFohYmfmPAIMFWxz44q-Ei_XYrmY";
         public const string FbAppDomainKey = "quartets-2595a.firebaseapp.com";
         public const string GamesCollection = "Games";

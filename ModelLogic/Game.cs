@@ -19,6 +19,7 @@ namespace Quartets.ModelLogic
         private bool isRestoringCards = false; // Flag to prevent syncing during restore
         private Dictionary<string, int> previousCompletedSets = new Dictionary<string, int>(); // Track previous CompletedSets to detect changes
         private string? gameEndedWinnerName; // Prevent duplicate game-ended notifications across snapshots/threads
+        private bool gameEndedDraw; // Prevent duplicate draw notifications
 
         public override string CurrentStatus
         {
@@ -218,6 +219,17 @@ namespace Quartets.ModelLogic
                 IsFull = updatedGame.IsFull;
                 CurrentNumOfPlayers = updatedGame.CurrentNumOfPlayers;
 
+                // Turn timer state from Firebase
+                if (updatedGame.TurnDurationSeconds > 0)
+                {
+                    TurnDurationSeconds = updatedGame.TurnDurationSeconds;
+                }
+                TurnStartUnixMs = updatedGame.TurnStartUnixMs;
+
+                // Game end-state from Firebase
+                GameEndState = string.IsNullOrWhiteSpace(updatedGame.GameEndState) ? "None" : updatedGame.GameEndState;
+                GameEndWinnerName = updatedGame.GameEndWinnerName ?? string.Empty;
+
                 // Update CurrentPlayerIndex FIRST before restoring cards, so turn state is correct
                 if (Players.Count == MaxNumOfPlayers)
                 {
@@ -243,10 +255,15 @@ namespace Quartets.ModelLogic
                                 
                                 Players[CurrentPlayerIndex].IsCurrentTurn = true;
 
+                                // Initialize turn timer at game start
+                                TurnStartUnixMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
                                 // Update Firebase with the starting player
                                 Dictionary<string, object> dict = new Dictionary<string, object>
                                 {
-                                    { nameof(CurrentPlayerIndex), CurrentPlayerIndex }
+                                    { nameof(CurrentPlayerIndex), CurrentPlayerIndex },
+                                    { nameof(TurnStartUnixMs), TurnStartUnixMs },
+                                    { nameof(TurnDurationSeconds), TurnDurationSeconds }
                                 };
                                 fbd.UpdateFields(Keys.GamesCollection, Id, dict, task => { });
                             }
@@ -271,6 +288,18 @@ namespace Quartets.ModelLogic
                             Players[CurrentPlayerIndex].IsCurrentTurn = true;
                         }
                     }
+                }
+
+                // Backward compatibility: if the game existed before the timer fields were added, initialize once (host only).
+                if (IsFull && TurnStartUnixMs == 0 && IsHostUser)
+                {
+                    TurnStartUnixMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                    Dictionary<string, object> dict = new Dictionary<string, object>
+                    {
+                        { nameof(TurnStartUnixMs), TurnStartUnixMs },
+                        { nameof(TurnDurationSeconds), TurnDurationSeconds }
+                    };
+                    fbd.UpdateFields(Keys.GamesCollection, Id, dict, task => { });
                 }
 
                 // Check for CompletedSets changes BEFORE restoring (to detect other players' quartet completions)
@@ -338,6 +367,7 @@ namespace Quartets.ModelLogic
 
                         // In case we joined mid-game or missed the increment event, ensure we still detect game end.
                         CheckForGameEndFromLocalState();
+                        CheckForDeckEmptyEndFromLocalState();
                         
                         // After restoring, if we're the host, ensure all players have 4 cards
                         // This handles the case where a new player joined but doesn't have cards in Firebase yet
@@ -355,6 +385,17 @@ namespace Quartets.ModelLogic
                 }
 
                 MainThread.BeginInvokeOnMainThread(() => OnGameChanged?.Invoke(this, EventArgs.Empty));
+
+                // If Firebase says game ended, notify UI exactly once on all clients.
+                if (string.Equals(GameEndState, "Win", StringComparison.OrdinalIgnoreCase) &&
+                    !string.IsNullOrWhiteSpace(GameEndWinnerName))
+                {
+                    NotifyGameEndedOnce(GameEndWinnerName);
+                }
+                else if (string.Equals(GameEndState, "Draw", StringComparison.OrdinalIgnoreCase))
+                {
+                    NotifyGameDrawOnce();
+                }
             }
             else
             {
@@ -364,6 +405,64 @@ namespace Quartets.ModelLogic
                     Toast.Make(Strings.GameDeleted, ToastDuration.Long).Show();
                 });
             }
+        }
+
+        private void CheckForDeckEmptyEndFromLocalState()
+        {
+            // If deck is empty, host determines winner by most completed sets; tie/zero => draw.
+            // Result is written to Firebase once so all clients show the popup and navigate home.
+            if (!IsHostUser || !IsFull || string.IsNullOrEmpty(Id))
+            {
+                return;
+            }
+
+            if (!string.Equals(GameEndState, "None", StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            if (Deck.Count > 0)
+            {
+                return;
+            }
+
+            if (Players == null || Players.Count == 0)
+            {
+                return;
+            }
+
+            int maxSets = Players.Max(p => p.CompletedSets);
+            var leaders = Players.Where(p => p.CompletedSets == maxSets).ToList();
+
+            if (maxSets <= 0 || leaders.Count != 1)
+            {
+                // Draw (either nobody completed any set, or there is a tie)
+                SetGameEndStateInFirebase("Draw", string.Empty);
+            }
+            else
+            {
+                // Winner is player with most completed sets
+                SetGameEndStateInFirebase("Win", leaders[0].Name);
+            }
+        }
+
+        private void SetGameEndStateInFirebase(string state, string winnerName)
+        {
+            GameEndState = state;
+            GameEndWinnerName = winnerName ?? string.Empty;
+
+            if (string.IsNullOrEmpty(Id))
+            {
+                return;
+            }
+
+            Dictionary<string, object> dict = new Dictionary<string, object>
+            {
+                { nameof(GameEndState), GameEndState },
+                { nameof(GameEndWinnerName), GameEndWinnerName }
+            };
+
+            fbd.UpdateFields(Keys.GamesCollection, Id, dict, task => { });
         }
 
         private void CheckForGameEndFromLocalState()
@@ -392,7 +491,34 @@ namespace Quartets.ModelLogic
             }
 
             gameEndedWinnerName = winnerName;
+            gameEndedDraw = false;
+
+            // Persist end state so all clients see it (safe even if already set)
+            if (string.Equals(GameEndState, "None", StringComparison.OrdinalIgnoreCase))
+            {
+                SetGameEndStateInFirebase("Win", winnerName);
+            }
+
             MainThread.BeginInvokeOnMainThread(() => OnGameEnded?.Invoke(this, winnerName));
+        }
+
+        private void NotifyGameDrawOnce()
+        {
+            if (gameEndedDraw)
+            {
+                return;
+            }
+
+            gameEndedDraw = true;
+            gameEndedWinnerName = null;
+
+            // Persist end state so all clients see it (safe even if already set)
+            if (string.Equals(GameEndState, "None", StringComparison.OrdinalIgnoreCase))
+            {
+                SetGameEndStateInFirebase("Draw", string.Empty);
+            }
+
+            MainThread.BeginInvokeOnMainThread(() => OnGameDrawn?.Invoke(this, EventArgs.Empty));
         }
 
         private Card GetCardFromDeck()
@@ -404,6 +530,8 @@ namespace Quartets.ModelLogic
                 Deck.RemoveAt(0);
                 // Sync deck after removing card
                 SyncCardsToFirebase();
+                // If deck just became empty, host may need to end the game by most completed sets.
+                CheckForDeckEmptyEndFromLocalState();
                 return card;
             }
             return null;
@@ -985,6 +1113,9 @@ namespace Quartets.ModelLogic
             };
 
             fbd.UpdateFields(Keys.GamesCollection, Id, dict, task => { });
+
+            // After syncing, if deck is empty host may need to end the game.
+            CheckForDeckEmptyEndFromLocalState();
         }
 
         private void RestoreCardsFromFirebase()
@@ -1219,9 +1350,14 @@ namespace Quartets.ModelLogic
             int next = CurrentPlayerIndex;
             Players[next].IsCurrentTurn = true;
 
+            // Reset turn timer
+            TurnStartUnixMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
             Dictionary<string, object> dict = new Dictionary<string, object>
             {
-                { nameof(CurrentPlayerIndex), CurrentPlayerIndex }
+                { nameof(CurrentPlayerIndex), CurrentPlayerIndex },
+                { nameof(TurnStartUnixMs), TurnStartUnixMs },
+                { nameof(TurnDurationSeconds), TurnDurationSeconds }
             };
 
             fbd.UpdateFields(Keys.GamesCollection, Id, dict, task =>

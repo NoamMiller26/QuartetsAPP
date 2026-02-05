@@ -9,9 +9,61 @@
 
     <Grid RowDefinitions="Auto, *" Padding="16" RowSpacing="12">
         <!-- Header -->
-        <VerticalStackLayout Spacing="4">
+        <VerticalStackLayout Spacing="6">
             <Label Text="Quartets" FontSize="24" FontAttributes="Bold" HorizontalOptions="Center" TextColor="#3C2E86"/>
             <Label Text="{Binding CurrentStatus}" FontSize="14" HorizontalOptions="Center" TextColor="Black"/>
+
+            <!-- Turn timer "pill" -->
+            <Frame IsVisible="{Binding IsTurnTimerVisible}"
+                   Padding="10,6"
+                   CornerRadius="18"
+                   HasShadow="True"
+                   HorizontalOptions="Center"
+                   BackgroundColor="#3C2E86">
+                <Label Text="{Binding RemainingSeconds, StringFormat='⏱ {0}s'}"
+                       FontSize="18"
+                       FontAttributes="Bold"
+                       TextColor="White"
+                       HorizontalOptions="Center"
+                       VerticalOptions="Center">
+                    <Label.Triggers>
+                        <!-- Last 10 seconds: red background for urgency -->
+                        <DataTrigger TargetType="Label" Binding="{Binding RemainingSeconds}" Value="10">
+                            <Setter Property="TextColor" Value="White"/>
+                        </DataTrigger>
+                        <DataTrigger TargetType="Label" Binding="{Binding RemainingSeconds}" Value="9">
+                            <Setter Property="TextColor" Value="White"/>
+                        </DataTrigger>
+                        <DataTrigger TargetType="Label" Binding="{Binding RemainingSeconds}" Value="8">
+                            <Setter Property="TextColor" Value="White"/>
+                        </DataTrigger>
+                        <DataTrigger TargetType="Label" Binding="{Binding RemainingSeconds}" Value="7">
+                            <Setter Property="TextColor" Value="White"/>
+                        </DataTrigger>
+                        <DataTrigger TargetType="Label" Binding="{Binding RemainingSeconds}" Value="6">
+                            <Setter Property="TextColor" Value="White"/>
+                        </DataTrigger>
+                        <DataTrigger TargetType="Label" Binding="{Binding RemainingSeconds}" Value="5">
+                            <Setter Property="TextColor" Value="White"/>
+                        </DataTrigger>
+                        <DataTrigger TargetType="Label" Binding="{Binding RemainingSeconds}" Value="4">
+                            <Setter Property="TextColor" Value="White"/>
+                        </DataTrigger>
+                        <DataTrigger TargetType="Label" Binding="{Binding RemainingSeconds}" Value="3">
+                            <Setter Property="TextColor" Value="White"/>
+                        </DataTrigger>
+                        <DataTrigger TargetType="Label" Binding="{Binding RemainingSeconds}" Value="2">
+                            <Setter Property="TextColor" Value="White"/>
+                        </DataTrigger>
+                        <DataTrigger TargetType="Label" Binding="{Binding RemainingSeconds}" Value="1">
+                            <Setter Property="TextColor" Value="White"/>
+                        </DataTrigger>
+                        <DataTrigger TargetType="Label" Binding="{Binding RemainingSeconds}" Value="0">
+                            <Setter Property="TextColor" Value="White"/>
+                        </DataTrigger>
+                    </Label.Triggers>
+                </Label>
+            </Frame>
         </VerticalStackLayout>
 
         <ScrollView Grid.Row="1">
