@@ -6,7 +6,10 @@ using Microsoft.Maui.Authentication;
 
 namespace Quartets.Platforms.Android
 {
-    [Activity(NoHistory = true, LaunchMode = LaunchMode.SingleTop, Exported = true)]
+    [Activity(
+        NoHistory = true,
+        LaunchMode = LaunchMode.SingleTask,
+        Exported = true)]
     [IntentFilter(
         new[] { Intent.ActionView },
         Categories = new[]
@@ -24,5 +27,3 @@ namespace Quartets.Platforms.Android
         }
     }
 }
-
-

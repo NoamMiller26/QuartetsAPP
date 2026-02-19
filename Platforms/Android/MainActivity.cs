@@ -9,11 +9,21 @@ using Quartets.Platforms.Android;
 
 namespace Quartets
 {
-    [Activity(Theme = "@style/Maui.SplashTheme", MainLauncher = true, LaunchMode = LaunchMode.SingleTop, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation | ConfigChanges.UiMode | ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize | ConfigChanges.Density)]
+    [Activity(
+        Theme = "@style/Maui.SplashTheme",
+        MainLauncher = true,
+        LaunchMode = LaunchMode.SingleTask, // 🔥 שינוי קריטי
+        ConfigurationChanges = ConfigChanges.ScreenSize |
+                               ConfigChanges.Orientation |
+                               ConfigChanges.UiMode |
+                               ConfigChanges.ScreenLayout |
+                               ConfigChanges.SmallestScreenSize |
+                               ConfigChanges.Density)]
     public class MainActivity : MauiAppCompatActivity
     {
         MyTimer? mTimer;
-        override protected void OnCreate(Bundle? savedInstanceState)
+
+        protected override void OnCreate(Bundle? savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
             RegisterTimerMessages();
@@ -22,7 +32,7 @@ namespace Quartets
 
         private void StartDeleteFBDocsService()
         {
-            Intent = new Android.Content.Intent(this, typeof(DeleteFBDocsService));
+            Intent = new Intent(this, typeof(DeleteFBDocsService));
             StartService(Intent);
         }
 
@@ -32,6 +42,7 @@ namespace Quartets
             {
                 OnMessageReceived(m.Value);
             });
+
             WeakReferenceMessenger.Default.Register<AppMessage<bool>>(this, (r, m) =>
             {
                 OnMessageReceived(m.Value);
