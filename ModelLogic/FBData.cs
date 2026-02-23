@@ -1,6 +1,7 @@
 ﻿using System;
 using Firebase.Auth;
 using Firebase.Auth.Providers;
+using Microsoft.Maui.Storage;
 using Plugin.CloudFirestore;
 using Quartets.Models;
 
@@ -77,7 +78,22 @@ namespace Quartets.ModelLogic
         {
             get
             {
-                return facl.User.Uid;
+                // Prefer Firebase user ID when signed in with email/password
+                if (facl?.User != null && !string.IsNullOrWhiteSpace(facl.User.Uid))
+                {
+                    return facl.User.Uid;
+                }
+
+                // Fallback: GitHub login flow stores a stable ID in preferences.
+                // It is stored as a long (Int64), so read it as long and convert to string.
+                long gitHubIdLong = Preferences.Get(Keys.GitHubUserIdKey, 0L);
+                if (gitHubIdLong != 0L)
+                {
+                    return gitHubIdLong.ToString();
+                }
+
+                // As a last resort, return empty string instead of throwing
+                return string.Empty;
             }
         }
     }
