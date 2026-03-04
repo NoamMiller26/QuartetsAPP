@@ -7,14 +7,29 @@ namespace Quartets.ModelsLogic
 {
     public abstract class BoardModel
     {
+        #region Fields
+
         protected readonly SetOfCards setOfCards = new();
+
+        #endregion
+
+        #region Properties
+
         public List<Card> Hand { get; protected set; } = new();
+
+        #endregion
+
+        #region Constructor
 
         public BoardModel(int initialHandSize = 4)
         {
             for (int i = 0; i < initialHandSize; i++)
                 Hand.Add(setOfCards.GetRandomCard());
         }
+
+        #endregion
+
+        #region Public Methods
 
         public void AddCardToHand(Card card) => Hand.Add(card);
         public void RemoveCardFromHand(Card card) => Hand.Remove(card);
@@ -27,5 +42,7 @@ namespace Quartets.ModelsLogic
                 .Select(group => group.ToList())
                 .ToList();
         }
+
+        #endregion
     }
 }

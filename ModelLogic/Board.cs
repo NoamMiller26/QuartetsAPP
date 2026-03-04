@@ -7,9 +7,15 @@ namespace Quartets.ModelsLogic
 {
     public class Board : BoardModel
     {
+        #region Constructor
+
         public Board(int initialHandSize = 4) : base(initialHandSize)
         {
         }
+
+        #endregion
+
+        #region Public Methods
 
         public bool RequestCardFromOpponent(Card requestedCard, Board opponentBoard)
         {
@@ -28,5 +34,7 @@ namespace Quartets.ModelsLogic
             List<List<Card>> completedSets = GetCompleteSets();
             return completedSets;
         }
+
+        #endregion
     }
 }

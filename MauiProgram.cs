@@ -5,6 +5,8 @@ namespace Quartets
 {
     public static class MauiProgram
     {
+        #region Public Methods
+
         public static MauiApp CreateMauiApp()
         {
             var builder = MauiApp.CreateBuilder();
@@ -24,5 +26,7 @@ namespace Quartets
 
             return builder.Build();
         }
+
+        #endregion
     }
 }

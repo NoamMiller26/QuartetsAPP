@@ -8,7 +8,11 @@ namespace Quartets.Models
 {
     public class TimerSettings(long totalTimeInMillSeconds, long intervalTimeInMillSeconds)
     {
+        #region Properties
+
         public long TotalTimeInMillSeconds { get; set; } = totalTimeInMillSeconds;
         public long IntervalTimeInMillSeconds { get; set; } = intervalTimeInMillSeconds;
+
+        #endregion
     }
 }

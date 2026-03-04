@@ -6,13 +6,24 @@ namespace Quartets.Models
 {
     public abstract class PlayerModel
     {
+        #region Fields
+
         private readonly SetOfCards setCards = new();
         private readonly Random random = new Random();
+
+        #endregion
+
+        #region Properties
 
         public List<Card> Hand { get; private set; } = new();
         public string Name { get; set; }
         public string Id { get; set; }
         public bool IsCurrentTurn { get; set; }
+
+        #endregion
+
+        #region Constructor
+
         public PlayerModel(string name,string id)
         {
             Name = name;
@@ -25,5 +36,7 @@ namespace Quartets.Models
                 Hand.Add(newCard);
             }
         }
+
+        #endregion
     }
 }

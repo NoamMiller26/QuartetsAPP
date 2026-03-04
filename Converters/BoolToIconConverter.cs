@@ -5,6 +5,7 @@ namespace Quartets.Converters
 {
     internal class BoolToIconConverter : IValueConverter
     {
+        #region Public Methods
 
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
@@ -18,6 +19,8 @@ namespace Quartets.Converters
         {
             return null;
         }
+
+        #endregion
     }
 }
 

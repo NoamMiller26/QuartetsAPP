@@ -11,9 +11,15 @@ namespace Quartets.Models
 {
     public class CardModel : ImageButton
     {
+        #region Properties
+
         public int Value { get; set; }
         public enum Shapes { Club, Diamond, Heart, Spade };
         public Shapes Shape { get; set; }
+
+        #endregion
+
+        #region Constructor
 
         public CardModel(Shapes shape, int value)
         {
@@ -25,6 +31,11 @@ namespace Quartets.Models
             HorizontalOptions = new LayoutOptions(LayoutAlignment.Start, false);
             WidthRequest = 100;
         }
+
+        #endregion
+
+        #region Static Data / Properties
+
         private static readonly string[,] CardsImage = {
         {"ace_club.png","two_club.png","three_club.png","four_club.png","five_club.png","six_club.png","seven_club.png","eight_club.png","nine_club.png","ten_club.png","jack_club.png","queen_club.png","king_club.png"  },
         {"ace_diamond.png","two_diamond.png","three_diamond.png","four_diamond.png","five_diamond.png","six_diamond.png","seven_diamond.png","eight_diamond.png","nine_diamond.png","ten_diamond.png","jack_diamond.png","queen_diamond.png","king_diamond.png"  },
@@ -38,6 +49,7 @@ namespace Quartets.Models
                 return CardsImage.GetLength(1);
             }
         }
-       
+
+        #endregion
     }
 }

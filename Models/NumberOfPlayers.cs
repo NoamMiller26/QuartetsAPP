@@ -2,8 +2,15 @@
 {
     public class NumberOfPlayers
     {
+        #region Properties
+
         public int NumPlayers { get; set; }
         public string DisplayName => $"{NumPlayers}";
+
+        #endregion
+
+        #region Constructors
+
         public NumberOfPlayers(int numPlayers)
         {
             NumPlayers = numPlayers;
@@ -12,5 +19,7 @@
         {
             NumPlayers = 2;
         }
+
+        #endregion
     }
 }

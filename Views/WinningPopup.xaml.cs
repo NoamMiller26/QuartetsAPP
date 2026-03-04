@@ -3,17 +3,22 @@ using Quartets.ViewModels;
 
 namespace Quartets.Views;
 
+public partial class WinningPopup : Popup
+{
+    #region Fields
 
+    private readonly WinningPopupVM WinningPopupVM;
 
-	public partial class WinningPopup : Popup
-	{
-        private readonly WinningPopupVM WinningPopupVM;
+    #endregion
 
+    #region Constructor
 
-        public WinningPopup(string name)
-        {
-            InitializeComponent();
-            WinningPopupVM = new WinningPopupVM(name);
-            BindingContext = WinningPopupVM;
-        }
+    public WinningPopup(string name)
+    {
+        InitializeComponent();
+        WinningPopupVM = new WinningPopupVM(name);
+        BindingContext = WinningPopupVM;
     }
+
+    #endregion
+}

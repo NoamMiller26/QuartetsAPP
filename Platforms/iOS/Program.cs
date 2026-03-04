@@ -5,6 +5,8 @@ namespace Quartets
 {
     public class Program
     {
+        #region Entry Point
+
         // This is the main entry point of the application.
         static void Main(string[] args)
         {
@@ -12,5 +14,7 @@ namespace Quartets
             // you can specify it here.
             UIApplication.Main(args, null, typeof(AppDelegate));
         }
+
+        #endregion
     }
 }

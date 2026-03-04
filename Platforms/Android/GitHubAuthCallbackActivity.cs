@@ -21,9 +21,13 @@ namespace Quartets.Platforms.Android
         DataHost = "github-auth-callback")]
     public class GitHubAuthCallbackActivity : WebAuthenticatorCallbackActivity
     {
+        #region Lifecycle
+
         protected override void OnCreate(Bundle? savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
         }
+
+        #endregion
     }
 }

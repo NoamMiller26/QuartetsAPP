@@ -7,15 +7,57 @@ namespace Quartets.ViewModels
 {
     internal partial class LoginPageVM : ObservableObject
     {
+        #region Fields
+
+        private readonly User user = new();
+
+        #endregion
+
+        #region Commands
+
         public ICommand ToggleIsPasswordCommand { get; }
-        public bool IsPassword { get; set; } = true;
         public ICommand LoginCommand { get; }
         public ICommand LoginWithGitHubCommand { get; }
-        private readonly User user = new();
-        public bool CanLogin()
+
+        #endregion
+
+        #region Properties
+
+        public bool IsPassword { get; set; } = true;
+
+        public string UserName
         {
-            return user.CanLogin();
+            get => user.UserName;
+            set
+            {
+                user.UserName = value;
+                (LoginCommand as Command)?.ChangeCanExecute();
+            }
         }
+
+        public string Password
+        {
+            get => user.Password;
+            set
+            {
+                user.Password = value;
+                (LoginCommand as Command)?.ChangeCanExecute();
+            }
+        }
+
+        public string Email
+        {
+            get => user.Email;
+            set
+            {
+                user.Email = value;
+                (LoginCommand as Command)?.ChangeCanExecute();
+            }
+        }
+
+        #endregion
+
+        #region Constructor
 
         public LoginPageVM()
         {
@@ -24,6 +66,20 @@ namespace Quartets.ViewModels
             ToggleIsPasswordCommand = new Command(ToggleIsPassword);
             user.OnAuthCompleted += OnAuthComplete;
         }
+
+        #endregion
+
+        #region Public Methods
+
+        public bool CanLogin()
+        {
+            return user.CanLogin();
+        }
+
+        #endregion
+
+        #region Private Methods
+
         private void OnAuthComplete(object? sender, EventArgs e)
         {
             MainThread.InvokeOnMainThreadAsync(() =>
@@ -34,6 +90,7 @@ namespace Quartets.ViewModels
                 }
             });
         }
+
         private void Login()
         {
             user.Login();
@@ -59,46 +116,13 @@ namespace Quartets.ViewModels
                 }
             });
         }
+
         private void ToggleIsPassword()
         {
             IsPassword = !IsPassword;
             OnPropertyChanged(nameof(IsPassword));
         }
 
-
-        public string UserName
-        {
-            get => user.UserName;
-            set
-            {
-                user.UserName = value;
-                (LoginCommand as Command)?.ChangeCanExecute();
-            }
-
-        }
-        public string Password
-        {
-            get => user.Password;
-            set
-            {
-                user.Password = value;
-                (LoginCommand as Command)?.ChangeCanExecute();
-            }
-
-        }
-        public string Email
-        {
-            get => user.Email;
-            set
-            {
-                user.Email = value;
-                (LoginCommand as Command)?.ChangeCanExecute();
-            }
-
-        }
-
-
-
-
+        #endregion
     }
 }

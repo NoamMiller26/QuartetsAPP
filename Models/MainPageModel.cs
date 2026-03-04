@@ -8,7 +8,11 @@ namespace Quartets.Models
 {
     public abstract class MainPageModel
     {
+        #region Public Methods
+
         public abstract void ShowInstructionsPrompt(object obj);
+
+        #endregion
     }
 }
 

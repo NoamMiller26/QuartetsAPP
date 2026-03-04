@@ -9,11 +9,13 @@ namespace Quartets.ModelLogic
 {
     public class MainPageML : MainPageModel
     {
-
+        #region Public Methods
 
         public override void ShowInstructionsPrompt(object obj)
         {
             Application.Current!.MainPage!.DisplayAlert(Strings.Instructions, Strings.InsructionsTxt, Strings.Ok);
         }
+
+        #endregion
     }
 }

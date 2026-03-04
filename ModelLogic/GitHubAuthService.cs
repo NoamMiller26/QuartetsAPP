@@ -10,10 +10,16 @@ namespace Quartets.ModelLogic
 {
     internal static class GitHubAuthService
     {
+        #region Fields
+
         private static readonly HttpClient httpClient = new HttpClient();
 
         // Redirect URI must also be registered in the GitHub OAuth app and platform-specific callbacks.
         private const string RedirectUri = "com.school.quartets://github-auth-callback";
+
+        #endregion
+
+        #region Public Methods
 
         public static async Task<GitHubUser?> LoginAsync()
         {
@@ -104,6 +110,8 @@ namespace Quartets.ModelLogic
                 UserName = login
             };
         }
+
+        #endregion
     }
 }
 

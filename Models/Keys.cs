@@ -4,6 +4,8 @@ namespace Quartets.Models
 {
     internal class Keys
     {
+        #region Constants
+
         public const string UserNameKey = "Username";
         public const string PasswordKey = "Password";
         public const string EmailKey = "Email";
@@ -16,5 +18,7 @@ namespace Quartets.Models
         public const int TimerInterval = 1000;
         public const int OneHourInMilliseconds = 3600000;
         public const long FinishedSignal = -1000;
+
+        #endregion
     }
 }

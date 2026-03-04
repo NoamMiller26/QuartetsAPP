@@ -5,15 +5,25 @@ namespace Quartets.ModelLogic
 {
     public class Player : PlayerModel
     {
+        #region Properties
+
         public ObservableCollection<Card> HandObservable { get; private set; } = new();
 
         public int CompletedSets { get; private set; }
+
+        #endregion
+
+        #region Constructor
 
         public Player(string playerName, string id) : base(playerName, id)
         {
             foreach (Card card in Hand)
                 HandObservable.Add(card);
         }
+
+        #endregion
+
+        #region Public Methods
 
         public void AddCard(Card card)
         {
@@ -42,5 +52,7 @@ namespace Quartets.ModelLogic
 
             return quartets;
         }
+
+        #endregion
     }
 }

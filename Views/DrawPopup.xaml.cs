@@ -5,11 +5,15 @@ namespace Quartets.Views;
 
 public partial class DrawPopup : Popup
 {
+    #region Constructor
+
     public DrawPopup()
     {
         InitializeComponent();
         BindingContext = new DrawPopupVM();
     }
+
+    #endregion
 }
 
 

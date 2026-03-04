@@ -7,8 +7,15 @@ namespace Quartets.Views
 {
     public partial class GamePage : ContentPage
     {
+        #region Fields
+
         private readonly GamePageVM gpVM;
         private readonly Game game;
+
+        #endregion
+
+        #region Constructor
+
         public GamePage(Game game)
         {
             Console.WriteLine("MEIR create game page");
@@ -23,7 +30,11 @@ namespace Quartets.Views
             // Subscribe to quartet completion event to show popup
             gpVM.OnQuartetCompletedEvent += ShowQuartetCompletedPopup;
         }
-        
+
+        #endregion
+
+        #region Private Methods
+
         private async void ShowGameEndPopup(string winnerName)
         {
             // Check if current player is the winner
@@ -97,7 +108,11 @@ namespace Quartets.Views
             var completedSetPopup = new CompletedSetPopUp(playerName, isCurrentPlayer);
             await this.ShowPopupAsync(completedSetPopup);
         }
-        
+
+        #endregion
+
+        #region Overrides
+
         protected override void OnAppearing()
         {
             base.OnAppearing();
@@ -113,5 +128,7 @@ namespace Quartets.Views
             gpVM.RemoveSnapshotListener();
             base.OnDisappearing();
         }
+
+        #endregion
     }
 }

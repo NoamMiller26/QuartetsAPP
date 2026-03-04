@@ -4,12 +4,19 @@ namespace Quartets.ModelLogic
 {
     public class SetOfCards : SetOfCardsModel
     {
+        #region Constructor
+
         public SetOfCards()
         {
             cards = [];
             usedCards = [];
             FillPakage();
         }
+
+        #endregion
+
+        #region Protected Methods
+
         protected override bool IsExist(Card currCard)
         {
             bool res = false;
@@ -22,12 +29,18 @@ namespace Quartets.ModelLogic
             }
             return res;
         }
+
         protected override void FillPakage()
         {
             foreach (CardModel.Shapes shape in Enum.GetValues(typeof(CardModel.Shapes)))
                 for (int value = 1; value <= Card.CardsInShape; value++)
                     cards!.Add(new Card(shape, value));
         }
+
+        #endregion
+
+        #region Public Methods
+
         public override Card GetRandomCard()
         {
             if (cards == null || !cards.Any())
@@ -42,10 +55,13 @@ namespace Quartets.ModelLogic
             return card;
 
         }
+
         public override Card Add(Card card)
         {
             cards!.Add(card);
             return card;
         }
+
+        #endregion
     }
 }

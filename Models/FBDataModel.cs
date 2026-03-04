@@ -6,10 +6,22 @@ namespace Quartets.Models
 {
     public abstract class FBDataModel
     {
+        #region Fields
+
         protected FirebaseAuthClient facl;
         protected IFirestore fs;
+
+        #endregion
+
+        #region Properties
+
         public abstract string DisplayName { get; }
         public abstract string UserId { get; }
+
+        #endregion
+
+        #region Public Methods
+
         public abstract void CreateUserWithEmailAndPasswordAsync(string email, string password, string name, Action<System.Threading.Tasks.Task> OnComplete);
         public abstract void SignInWithEmailAndPasswordAsync(string email, string password, Action<System.Threading.Tasks.Task> OnComplete);
         public abstract string SetDocument(object obj, string collectonName, string id, Action<System.Threading.Tasks.Task> OnComplete);
@@ -17,6 +29,11 @@ namespace Quartets.Models
         public abstract IListenerRegistration AddSnapshotListener(string collectonName, string id, Plugin.CloudFirestore.DocumentSnapshotHandler OnChange);
         public abstract void UpdateFields(string collectonName, string id, Dictionary<string, object> dict, Action<Task> OnComplete);
         public abstract void DeleteDocument(string collectonName, string id, Action<Task> OnComplete);
+
+        #endregion
+
+        #region Constructor
+
         public FBDataModel()
         {
             FirebaseAuthConfig fac = new()
@@ -28,6 +45,8 @@ namespace Quartets.Models
             facl = new FirebaseAuthClient(fac);
             fs = CrossCloudFirestore.Current.Instance;
         }
+
+        #endregion
     }
 }
 

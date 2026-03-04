@@ -5,12 +5,20 @@ namespace Quartets.Views;
 
 public partial class LosingPopup : Popup
 {
-	private readonly LosingPopupVM losingPopupVM;
+    #region Fields
 
-	public LosingPopup(string winnerName)
-	{
-		InitializeComponent();
-		losingPopupVM = new LosingPopupVM(winnerName);
-		BindingContext = losingPopupVM;
-	}
+    private readonly LosingPopupVM losingPopupVM;
+
+    #endregion
+
+    #region Constructor
+
+    public LosingPopup(string winnerName)
+    {
+        InitializeComponent();
+        losingPopupVM = new LosingPopupVM(winnerName);
+        BindingContext = losingPopupVM;
+    }
+
+    #endregion
 }

@@ -7,6 +7,8 @@ namespace Quartets
 {
     public partial class App : Application
     {
+        #region Constructor
+
         public App()
         {
             InitializeComponent();
@@ -14,5 +16,7 @@ namespace Quartets
             MainPage = user.IsRegistered ? new LoginPage() : new RegisterPage();
             Routing.RegisterRoute("HomePage", typeof(HomePage));
         }
+
+        #endregion
     }
 }

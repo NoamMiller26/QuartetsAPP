@@ -5,12 +5,20 @@ namespace Quartets.Views;
 
 public partial class CompletedSetPopUp : Popup
 {
-	private readonly CompletedSetPopUpVM completedSetPopUpVM;
+    #region Fields
 
-	public CompletedSetPopUp(string playerName, bool isCurrentPlayer)
-	{
-		InitializeComponent();
-		completedSetPopUpVM = new CompletedSetPopUpVM(playerName, isCurrentPlayer);
-		BindingContext = completedSetPopUpVM;
-	}
+    private readonly CompletedSetPopUpVM completedSetPopUpVM;
+
+    #endregion
+
+    #region Constructor
+
+    public CompletedSetPopUp(string playerName, bool isCurrentPlayer)
+    {
+        InitializeComponent();
+        completedSetPopUpVM = new CompletedSetPopUpVM(playerName, isCurrentPlayer);
+        BindingContext = completedSetPopUpVM;
+    }
+
+    #endregion
 }

@@ -8,7 +8,14 @@ namespace Quartets.Platforms.Android
 {
     public class DeleteFBDocsService : Service
     {
+        #region Fields
+
         private bool isRunning = true;
+
+        #endregion
+
+        #region Lifecycle
+
         [return: GeneratedEnum]
         public override StartCommandResult OnStartCommand(Intent? intent, [GeneratedEnum] StartCommandFlags flags, int startId)
         {
@@ -18,6 +25,21 @@ namespace Quartets.Platforms.Android
             return base.OnStartCommand(intent, flags, startId);
         }
 
+        public override void OnDestroy()
+        {
+            isRunning = false;
+            base.OnDestroy();
+        }
+
+        public override IBinder? OnBind(Intent? intent)
+        {
+            //not used
+            return null;
+        }
+
+        #endregion
+
+        #region Private Methods
 
         private void DeleteFBDocs()
         {
@@ -27,15 +49,7 @@ namespace Quartets.Platforms.Android
             }
             StopSelf();
         }
-        public override void OnDestroy()
-        {
-            isRunning = false;
-            base.OnDestroy();
-        }
-        public override IBinder? OnBind(Intent? intent)
-        {
-            //not used
-            return null;
-        }
+
+        #endregion
     }
 }

@@ -21,7 +21,13 @@ namespace Quartets
                                ConfigChanges.Density)]
     public class MainActivity : MauiAppCompatActivity
     {
+        #region Fields
+
         MyTimer? mTimer;
+
+        #endregion
+
+        #region Lifecycle
 
         protected override void OnCreate(Bundle? savedInstanceState)
         {
@@ -29,6 +35,10 @@ namespace Quartets
             RegisterTimerMessages();
             StartDeleteFBDocsService();
         }
+
+        #endregion
+
+        #region Private Methods
 
         private void StartDeleteFBDocsService()
         {
@@ -63,5 +73,7 @@ namespace Quartets
             mTimer = new MyTimer(value.TotalTimeInMillSeconds, value.IntervalTimeInMillSeconds);
             mTimer.Start();
         }
+
+        #endregion
     }
 }

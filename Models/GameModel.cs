@@ -11,14 +11,21 @@ using static Quartets.Models.CardModel;
 namespace Quartets.Models
 {
     public abstract class GameModel
-    {    
+    {
+        #region Fields
+
         protected IListenerRegistration? ilr;
         protected FBData fbd = new();
+        protected Board GameBoard = new();
+
+        #endregion
+
+        #region Collections / Events
+
         [Ignored]
         public ObservableCollection<Player> Players { get; set; } = new ObservableCollection<Player>();
         [Ignored]
         public ObservableCollection<PlayerVM> OtherPlayers { get; set; } = new ObservableCollection<PlayerVM>();
-        protected Board GameBoard = new();
         [Ignored]
         public EventHandler? OnGameChanged;
         [Ignored]
@@ -29,6 +36,11 @@ namespace Quartets.Models
         public EventHandler? OnGameDrawn; // Event raised when game ends in a draw
         [Ignored]
         public EventHandler<(string playerName, string playerId)>? OnQuartetCompleted; // Event raised when a player completes a quartet, parameters are player name and player id
+
+        #endregion
+
+        #region Properties
+
         [Ignored]
         public Player CurrentPlayer { get; set; }
         [Ignored]
@@ -51,13 +63,13 @@ namespace Quartets.Models
         // Values: "None" | "Win" | "Draw"
         public string GameEndState { get; set; } = "None";
         public string GameEndWinnerName { get; set; } = string.Empty;
-        
+
         // Serializable card data for Firebase
         // Format: List of dictionaries with "Shape" (string) and "Value" (int) for each player
         public List<Dictionary<string, object>>? PlayerHandsData { get; set; }
         // Format: List of dictionaries with "Shape" (string) and "Value" (int) for deck cards
         public List<Dictionary<string, object>>? DeckData { get; set; }
-        
+
         [Ignored]
         public string Id { get; set; } = string.Empty;
         [Ignored]
@@ -71,14 +83,23 @@ namespace Quartets.Models
         [Ignored]
         public NumberOfPlayers? NumberOfPlayers { get; set; }
 
-               
-       
+        #endregion
+
+        #region Public Methods
+
         public abstract void SetDocument(Action<System.Threading.Tasks.Task> OnComplete);
         public abstract void AddSnapShotListener();
         public abstract void RemoveSnapShotListener();
         public abstract void DeleteDocument(Action<System.Threading.Tasks.Task> OnComplete);
-        protected abstract void createPlayers();
         public abstract void Init();
         public abstract void NextTurn();
+
+        #endregion
+
+        #region Protected Methods
+
+        protected abstract void createPlayers();
+
+        #endregion
     }
 }

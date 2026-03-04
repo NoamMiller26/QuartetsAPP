@@ -2,8 +2,14 @@
 {
     public class CompletedSetPopUpVM
     {
+        #region Properties
+
         public string Title { get; set; }
         public string Message { get; set; }
+
+        #endregion
+
+        #region Constructor
 
         public CompletedSetPopUpVM(string playerName, bool isCurrentPlayer)
         {
@@ -18,5 +24,7 @@
                 Message = $"{playerName} השלים רביעייה!";
             }
         }
+
+        #endregion
     }
 }

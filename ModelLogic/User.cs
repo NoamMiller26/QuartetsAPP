@@ -9,6 +9,20 @@ namespace Quartets.ModelLogic
 {
     internal class User : UserModels
     {
+        #region Constructor
+
+        public User()
+        {
+            UserName = Preferences.Get(Keys.UserNameKey, string.Empty);
+            Password = Preferences.Get(Keys.PasswordKey, string.Empty);
+            Email = Preferences.Get(Keys.EmailKey, string.Empty);
+            Age = Preferences.Get(Keys.AgeKey, string.Empty);
+        }
+
+        #endregion
+
+        #region Public Methods
+
         public override void Register()
         {
             fbd.CreateUserWithEmailAndPasswordAsync(Email, Password, UserName, OnComplete);
@@ -18,21 +32,6 @@ namespace Quartets.ModelLogic
             fbd.SignInWithEmailAndPasswordAsync(Email, Password, OnComplete);
         }
 
-        private void OnComplete(Task task)
-        {
-            if (task.IsCompletedSuccessfully)
-            {
-                SaveToPreferences();
-                OnAuthCompleted?.Invoke(this, EventArgs.Empty);
-            }
-            else if (task.Exception != null)
-            {
-                string msg = task.Exception.Message;
-                ShowAlert(GetFirebaseErrorMessage(msg));
-            }
-            else
-                ShowAlert(Strings.RegistrationFailed);
-        }
         public override string GetFirebaseErrorMessage(string msg)
         {
             if (msg.Contains(Strings.ErrMessageReason))
@@ -49,6 +48,34 @@ namespace Quartets.ModelLogic
             return Strings.UnknownErrorMessage;
         }
 
+        public override bool CanLogin()
+        {
+            return (!string.IsNullOrWhiteSpace(UserName) && !string.IsNullOrWhiteSpace(Password) && !string.IsNullOrWhiteSpace(Email));
+        }
+        public override bool CanRegister()
+        {
+            return (!string.IsNullOrWhiteSpace(UserName) && !string.IsNullOrWhiteSpace(Password) && !string.IsNullOrWhiteSpace(Email) && !string.IsNullOrWhiteSpace(Age));
+        }
+
+        #endregion
+
+        #region Private Methods
+
+        private void OnComplete(Task task)
+        {
+            if (task.IsCompletedSuccessfully)
+            {
+                SaveToPreferences();
+                OnAuthCompleted?.Invoke(this, EventArgs.Empty);
+            }
+            else if (task.Exception != null)
+            {
+                string msg = task.Exception.Message;
+                ShowAlert(GetFirebaseErrorMessage(msg));
+            }
+            else
+                ShowAlert(Strings.RegistrationFailed);
+        }
         private static void ShowAlert(string msg)
         {
             MainThread.InvokeOnMainThreadAsync(() =>
@@ -64,21 +91,6 @@ namespace Quartets.ModelLogic
             Preferences.Set(Keys.AgeKey, Age);
         }
 
-
-        public override bool CanLogin()
-        {
-            return (!string.IsNullOrWhiteSpace(UserName) && !string.IsNullOrWhiteSpace(Password) && !string.IsNullOrWhiteSpace(Email));
-        }
-        public override bool CanRegister()
-        {
-            return (!string.IsNullOrWhiteSpace(UserName) && !string.IsNullOrWhiteSpace(Password) && !string.IsNullOrWhiteSpace(Email) && !string.IsNullOrWhiteSpace(Age));
-        }
-        public User()
-        {
-            UserName = Preferences.Get(Keys.UserNameKey, string.Empty);
-            Password = Preferences.Get(Keys.PasswordKey, string.Empty);
-            Email = Preferences.Get(Keys.EmailKey, string.Empty);
-            Age = Preferences.Get(Keys.AgeKey, string.Empty);
-        }
+        #endregion
     }
 }

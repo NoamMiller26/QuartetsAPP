@@ -10,6 +10,8 @@ namespace Quartets.WinUI
     /// </summary>
     public partial class App : MauiWinUIApplication
     {
+        #region Constructor
+
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
         /// executed, and as such is the logical equivalent of main() or WinMain().
@@ -19,7 +21,13 @@ namespace Quartets.WinUI
             this.InitializeComponent();
         }
 
+        #endregion
+
+        #region Overrides
+
         protected override MauiApp CreateMauiApp() => MauiProgram.CreateMauiApp();
+
+        #endregion
     }
 
 }

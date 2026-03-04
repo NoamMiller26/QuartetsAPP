@@ -15,6 +15,8 @@ namespace Quartets.ViewModels
 {
     public partial class GamePageVM : ObservableObject
     {
+        #region Fields
+
         private readonly Game game;
         private readonly ObservableCollection<PlayerVM> opponents = new();
         private IDispatcherTimer? turnTimer;
@@ -22,6 +24,10 @@ namespace Quartets.ViewModels
         private long localTurnSeenTicks;
         private long lastSeenTurnStartUnixMs;
         private int lastSeenTurnIndex = -1;
+
+        #endregion
+
+        #region Properties
 
         public string MyName => game.MyName;
 
@@ -40,6 +46,18 @@ namespace Quartets.ViewModels
         public int RemainingSeconds { get; private set; } = 60;
         public bool IsTurnTimerVisible => game.IsFull;
 
+        #endregion
+
+        #region Events
+
+        public event Action<string>? OnGameEndedEvent;
+        public event Action? OnGameDrawnEvent;
+        public event Action<string, string>? OnQuartetCompletedEvent; // Parameters: playerName, playerId
+
+        #endregion
+
+        #region Constructor
+
         public GamePageVM(Game game)
         {
             this.game = game;
@@ -56,6 +74,26 @@ namespace Quartets.ViewModels
             game.OnGameDrawn += OnGameDrawn;
             game.OnQuartetCompleted += OnQuartetCompleted;
         }
+
+        #endregion
+
+        #region Public Methods
+
+        public void AddSnapshotListener()
+        {
+            game.AddSnapShotListener();
+            StartTurnTimer();
+        }
+
+        public void RemoveSnapshotListener()
+        {
+            StopTurnTimer();
+            game.RemoveSnapShotListener();
+        }
+
+        #endregion
+
+        #region Private Methods
 
         private void BuildPlayerVMs()
         {
@@ -129,9 +167,6 @@ namespace Quartets.ViewModels
         {
             // Notify the page to show the appropriate popup
             OnGameEndedEvent?.Invoke(winnerName);
-          
-
-           
         }
 
         private void OnGameDrawn(object sender, EventArgs e)
@@ -139,26 +174,10 @@ namespace Quartets.ViewModels
             OnGameDrawnEvent?.Invoke();
         }
 
-        public event Action<string>? OnGameEndedEvent;
-        public event Action? OnGameDrawnEvent;
-        public event Action<string, string>? OnQuartetCompletedEvent; // Parameters: playerName, playerId
-
         private void OnQuartetCompleted(object sender, (string playerName, string playerId) e)
         {
             // Notify the page to show the popup
             OnQuartetCompletedEvent?.Invoke(e.playerName, e.playerId);
-        }
-
-        public void AddSnapshotListener()
-        {
-            game.AddSnapShotListener();
-            StartTurnTimer();
-        }
-
-        public void RemoveSnapshotListener()
-        {
-            StopTurnTimer();
-            game.RemoveSnapShotListener();
         }
 
         private void StartTurnTimer()
@@ -260,5 +279,7 @@ namespace Quartets.ViewModels
 
         // Android native timer integration removed to ensure all platforms use the same
         // Firestore-based clock, avoiding drift between devices.
+
+        #endregion
     }
 }

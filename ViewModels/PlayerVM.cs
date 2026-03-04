@@ -7,9 +7,15 @@ namespace Quartets.ViewModels
 {
     public partial class PlayerVM : ObservableObject
     {
+        #region Fields
+
         private readonly Player player;
         private readonly Func<PlayerVM, Task> onAsk;
         private bool isLocalPlayer;
+
+        #endregion
+
+        #region Properties
 
         public string Name => player.Name;
         public string Id => player.Id;
@@ -33,7 +39,15 @@ namespace Quartets.ViewModels
 
         public ObservableCollection<int> PlaceHolderBacks { get; } = new ObservableCollection<int>();
 
+        #endregion
+
+        #region Commands
+
         public ICommand AskCommand { get; }
+
+        #endregion
+
+        #region Constructor
 
         public PlayerVM(Player p, bool isLocal, Func<PlayerVM, Task> onAskCallback)
         {
@@ -48,6 +62,10 @@ namespace Quartets.ViewModels
             // האזנה לשינויים ביד השחקן
             player.HandObservable.CollectionChanged += PlayerHand_CollectionChanged;
         }
+
+        #endregion
+
+        #region Private Methods
 
         private void PlayerHand_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
@@ -76,5 +94,7 @@ namespace Quartets.ViewModels
                 await onAsk(this);
             }
         }
+
+        #endregion
     }
 }
